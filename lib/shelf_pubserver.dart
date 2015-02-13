@@ -9,7 +9,6 @@ import 'dart:convert';
 
 import 'package:logging/logging.dart';
 import 'package:mime/mime.dart';
-import 'package:pub_semver/pub_semver.dart';
 import 'package:shelf/shelf.dart' as shelf;
 import 'package:yaml/yaml.dart';
 
@@ -383,7 +382,6 @@ class ShelfPubServer {
   }
 
   Uri _finishUploadAsyncUrl(Uri url) {
-    var encode = Uri.encodeComponent;
     return url.resolve('/api/packages/versions/newUploadFinish');
   }
 

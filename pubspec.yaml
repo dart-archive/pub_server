@@ -2,7 +2,7 @@ name: pub_server
 version: 0.1.0
 author: Dart Team <misc@dartlang.org>
 description: A Dart package containing re-usable components for making a pub package server.
-homepage: https://www.dartlang.org
+homepage: https://github.com/dart-lang/pub_server
 
 environment:
   sdk: '>=1.5.0 <2.0.0'

@@ -226,10 +226,12 @@ main() {
           var server = new ShelfPubServer(mock);
           var request = getRequest('/packages/analyzer/versions/0.1.0.tar.gz');
           var response = await server.requestHandler(request);
-          var body = await response.readAsString();
 
           expect(response.statusCode, equals(303));
           expect(response.headers['location'], equals('$expectedUrl'));
+
+          var body = await response.readAsString();
+          expect(body, isEmpty);
         });
       });
     });
@@ -326,7 +328,6 @@ main() {
 
       test('sync failure', () async {
         var tarballBytes = const [1, 2, 3];
-        var newUrl = getUri('/api/packages/versions/new');
         var uploadUrl = getUri('/api/packages/versions/newUpload');
         var finishUrl =
             getUri('/api/packages/versions/newUploadFinish?error=abc');
