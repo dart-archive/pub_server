@@ -308,19 +308,39 @@ class ShelfPubServer {
       var match = _boundaryRegExp.matchAsPrefix(contentType);
       if (match != null) {
         var boundary = match.group(1);
-        return stream
-            .transform(new MimeMultipartTransformer(boundary))
-            .first.then((MimeMultipart part) {
+
+        // We have to listen to all multiparts: Just doing `parts.first` will
+        // result in the cancelation of the subscription which causes
+        // eventually a destruction of the socket, this is an odd side-effect.
+        // What we would like to have is something like this:
+        //     parts.expect(1).then((part) { upload(part); })
+        bool firstPartArrived = false;
+        var completer = new Completer();
+        var subscription;
+
+        var parts = stream.transform(new MimeMultipartTransformer(boundary));
+        subscription = parts.listen((MimeMultipart part) {
+          // If we get more than one part, we'll ignore the rest of the input.
+          if (firstPartArrived) {
+            subscription.cancel();
+            return;
+          }
+          firstPartArrived = true;
+
           // TODO: Ensure that `part.headers['content-disposition']` is
           // `form-data; name="file"; filename="package.tar.gz`
-          return repository.upload(part).then((_) {
+          repository.upload(part).then((_) {
+            _logger.info('Redirecting to found url.');
             return new shelf.Response.found(_finishUploadSimpleUrl(uri));
           }).catchError((error, stack) {
+            _logger.warning('Error occured: $error\n$stack.');
             // TODO: Do error checking and return error codes?
             return new shelf.Response.found(
                 _finishUploadSimpleUrl(uri, error: error));
-          });
+          }).then(completer.complete);
         });
+
+        return completer.future;
       }
     }
     return
