@@ -106,6 +106,23 @@ final Logger _logger = new Logger('pubserver.shelf_pubserver');
 ///           },
 ///        }
 ///
+///   * Adding a new uploader
+///
+///         POST /api/packages/<package-name>/uploaders
+///         email=<uploader-email>
+///
+///         [200 OK] [Content-Type: application/json]
+///         or
+///         [400 Client Error]
+///
+///   * Removing an existing uploader.
+///
+///         DELETE /api/packages/<package-name>/uploaders/<uploader-email>
+///         [200 OK] [Content-Type: application/json]
+///         or
+///         [400 Client Error]
+///
+///
 /// It will use the pub [PackageRepository] given in the constructor to provide
 /// this HTTP endpoint.
 class ShelfPubServer {
@@ -114,6 +131,12 @@ class ShelfPubServer {
 
   static final RegExp _versionRegexp =
       new RegExp(r'^/api/packages/([^/]+)/versions/([^/]+)$');
+
+  static final RegExp _addUploaderRegexp =
+      new RegExp(r'^/api/packages/([^/]+)/uploaders$');
+
+  static final RegExp _removeUploaderRegexp =
+      new RegExp(r'^/api/packages/([^/]+)/uploaders/([^/]+)$');
 
   static final RegExp _downloadRegexp =
       new RegExp(r'^/packages/([^/]+)/versions/([^/]+)\.tar\.gz$');
@@ -173,15 +196,38 @@ class ShelfPubServer {
         }
       }
     } else if (request.method == 'POST') {
-      if (!repository.supportsUpload) {
-        return new Future.value(new shelf.Response.notFound(null));
-      }
-
       if (path == '/api/packages/versions/newUpload') {
+        if (!repository.supportsUpload) {
+          return new Future.value(new shelf.Response.notFound(null));
+        }
+
         return _uploadSimple(
             request.requestedUri,
             request.headers['content-type'],
             request.read());
+      } else {
+        if (!repository.supportsUploaders) {
+          return new Future.value(new shelf.Response.notFound(null));
+        }
+
+        var addUploaderMatch = _addUploaderRegexp.matchAsPrefix(path);
+        if (addUploaderMatch != 0) {
+          String package = Uri.decodeComponent(addUploaderMatch.group(1));
+          return request.readAsString().then((String body) {
+            return _addUploader(package, body);
+          });
+        }
+      }
+    } else if (request.method == 'DELETE') {
+      if (!repository.supportsUploaders) {
+        return new Future.value(new shelf.Response.notFound(null));
+      }
+
+      var removeUploaderMatch = _removeUploaderRegexp.matchAsPrefix(path);
+      if (removeUploaderMatch != 0) {
+        String package = Uri.decodeComponent(removeUploaderMatch.group(1));
+        String user = Uri.decodeComponent(removeUploaderMatch.group(2));
+        return removeUploader(package, user);
       }
     }
     return new Future.value(new shelf.Response.notFound(null));
@@ -351,20 +397,66 @@ class ShelfPubServer {
     var error = uri.queryParameters['error'];
     _logger.info('Finish simple upload (error: $error).');
     if (error != null) {
-      return _jsonResponse(
-          { 'error' : { 'message' : error } }, status: 400);
+      return _badRequest(error);
     }
     return _jsonResponse(
         { 'success' : { 'message' : 'Successfully uploaded package.' } });
   }
 
 
+  // Uploader handlers.
+
+  Future<shelf.Response> _addUploader(String package, String body) async {
+    var parts = body.split('=');
+    if (parts.length == 2 && parts[0] == 'email' && parts[1].length > 0) {
+      try {
+        var user = Uri.decodeQueryComponent(parts[1]);
+        await repository.addUploader(package, user);
+        return _successfullRequest('Successfully added uploader to package.');
+      } on UploaderAlreadyExistsException catch (error, stack) {
+        return
+            _badRequest('Cannot add an already-existent uploader to package.');
+      } on UnauthorizedAccessException catch (error, stack) {
+        return _unauthorizedRequest();
+      }
+    }
+    return _badRequest('Invalid request');
+  }
+
+  Future<shelf.Response> removeUploader(String package,
+                                        String userEmail) async {
+    try {
+      await repository.removeUploader(package, userEmail);
+      return _successfullRequest('Successfully removed uploader from package.');
+    } on LastUploaderRemoveException catch (error, stack) {
+      return _badRequest('Cannot remove last uploader of a package.');
+    } on UnauthorizedAccessException catch (error, stack) {
+      return _unauthorizedRequest();
+    }
+  }
+
+
   // Helper functions.
+
+  Future<shelf.Response> _successfullRequest(String message) {
+    return new Future.value(new shelf.Response(
+        200,
+        body: JSON.encode({ 'success' : { 'message' : message } }),
+        headers: {'content-type': 'application/json'}));
+  }
+
+
+  Future<shelf.Response> _unauthorizedRequest() {
+    return new Future.value(new shelf.Response(
+        403,
+        body: JSON.encode({'error' : { 'message' : 'Unauthorized request.'}}),
+        headers: {'content-type': 'application/json'}));
+  }
 
   Future<shelf.Response> _badRequest(String message) {
     return new Future.value(new shelf.Response(
         400,
-        body: JSON.encode({ 'error' : message }),
+        body: JSON.encode({ 'error' : { 'message' : message } }),
         headers: {'content-type': 'application/json'}));
   }
 

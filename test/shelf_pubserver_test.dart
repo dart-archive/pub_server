@@ -20,12 +20,16 @@ class RepositoryMock implements PackageRepository {
   final Function startAsyncUploadFun;
   final Function uploadFun;
   final Function versionsFun;
+  final Function addUploaderFun;
+  final Function removeUploaderFun;
 
   RepositoryMock(
       {this.downloadFun, this.downloadUrlFun, this.finishAsyncUploadFun,
        this.lookupVersionFun, this.startAsyncUploadFun, this.uploadFun,
        this.versionsFun, this.supportsAsyncUpload: false,
-       this.supportsDownloadUrl: false, this.supportsUpload: false});
+       this.supportsDownloadUrl: false, this.supportsUpload: false,
+       this.addUploaderFun, this.removeUploaderFun,
+       this.supportsUploaders: false});
 
   Future<Stream> download(String package, String version) async {
     if (downloadFun != null) return downloadFun(package, version);
@@ -60,6 +64,8 @@ class RepositoryMock implements PackageRepository {
 
   final bool supportsUpload;
 
+  final bool supportsUploaders;
+
   Future upload(Stream<List<int>> data) {
     if (uploadFun != null) return uploadFun(data);
     throw 'upload';
@@ -68,6 +74,20 @@ class RepositoryMock implements PackageRepository {
   Stream<PackageVersion> versions(String package) {
     if (versionsFun != null) return versionsFun(package);
     return new Stream.fromFuture(new Future.error('versions'));
+  }
+
+  Future addUploader(String package, String userEmail) {
+    if (addUploaderFun != null) {
+      return addUploaderFun(package, userEmail);
+    }
+    throw 'addUploader';
+  }
+
+  Future removeUploader(String package, String userEmail) {
+    if (removeUploaderFun != null) {
+      return removeUploaderFun(package, userEmail);
+    }
+    throw 'removeUploader';
   }
 }
 
@@ -366,6 +386,122 @@ main() {
         var response = await server.requestHandler(request);
 
         expect(response.statusCode, equals(404));
+      });
+    });
+
+
+    group('uploaders', () {
+      group('add uploader', () {
+        var url = getUri('/api/packages/pkg/uploaders');
+        var formEncodedBody = 'email=hans';
+
+        test('no support', () async {
+          var mock = new RepositoryMock();
+          var server = new ShelfPubServer(mock);
+          var request = new shelf.Request('POST', url, body: formEncodedBody);
+          var response = await server.requestHandler(request);
+
+          expect(response.statusCode, equals(404));
+        });
+
+        test('success', () async {
+          var mock = new RepositoryMock(
+              supportsUploaders: true,
+              addUploaderFun: expectAsync((package, user) {
+            expect(package, equals('pkg'));
+            expect(user, equals('hans'));
+          }));
+
+          var server = new ShelfPubServer(mock);
+          var request = new shelf.Request('POST', url, body: formEncodedBody);
+          var response = await server.requestHandler(request);
+
+          expect(response.statusCode, equals(200));
+        });
+
+        test('already exists', () async {
+          var mock = new RepositoryMock(
+              supportsUploaders: true,
+              addUploaderFun: (package, user) {
+            throw new UploaderAlreadyExistsException();
+          });
+
+          var server = new ShelfPubServer(mock);
+          var request = new shelf.Request('POST', url, body: formEncodedBody);
+          shelf.Response response = await server.requestHandler(request);
+
+          expect(response.statusCode, equals(400));
+        });
+
+        test('unauthorized', () async {
+          var mock = new RepositoryMock(
+              supportsUploaders: true,
+              addUploaderFun: (package, user) {
+            throw new UnauthorizedAccessException('');
+          });
+
+          var server = new ShelfPubServer(mock);
+          var request = new shelf.Request('POST', url, body: formEncodedBody);
+          shelf.Response response = await server.requestHandler(request);
+
+          expect(response.statusCode, equals(403));
+        });
+      });
+
+      group('remove uploader', () {
+        var url = getUri('/api/packages/pkg/uploaders/hans');
+
+        test('no support', () async {
+          var mock = new RepositoryMock();
+          var server = new ShelfPubServer(mock);
+          var request = new shelf.Request('DELETE', url);
+          var response = await server.requestHandler(request);
+
+          expect(response.statusCode, equals(404));
+        });
+
+        test('success', () async {
+          var mock = new RepositoryMock(
+              supportsUploaders: true,
+              removeUploaderFun: expectAsync((package, user) {
+            expect(package, equals('pkg'));
+            expect(user, equals('hans'));
+          }));
+
+          var server = new ShelfPubServer(mock);
+          var request = new shelf.Request('DELETE', url);
+          var response = await server.requestHandler(request);
+
+          expect(response.statusCode, equals(200));
+        });
+
+        test('cannot remove last uploader', () async {
+          var mock = new RepositoryMock(
+              supportsUploaders: true,
+              removeUploaderFun: (package, user) {
+            throw new LastUploaderRemoveException();
+          });
+
+          var server = new ShelfPubServer(mock);
+          var request = new shelf.Request('DELETE', url);
+          shelf.Response response = await server.requestHandler(request);
+
+          expect(response.statusCode, equals(400));
+        });
+
+        test('unauthorized', () async {
+          var mock = new RepositoryMock(
+              supportsUploaders: true,
+              removeUploaderFun: (package, user) {
+            throw new UnauthorizedAccessException('');
+          });
+
+          var server = new ShelfPubServer(mock);
+          var request = new shelf.Request('DELETE', url);
+          shelf.Response response = await server.requestHandler(request);
+
+          expect(response.statusCode, equals(403));
+        });
       });
     });
   });
