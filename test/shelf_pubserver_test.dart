@@ -189,7 +189,7 @@ main() {
         expect(response.statusCode, equals(404));
       });
 
-      test('success full retrieval of version', () async {
+      test('successful retrieval of version', () async {
         var mock = new RepositoryMock(versionsFun: (String package) {
           // The pubspec is invalid, but that is irrelevant for this test.
           var pubspec = JSON.encode({'foo': 1});
@@ -206,7 +206,7 @@ main() {
         expect(JSON.decode(body), equals(expectedJson));
       });
 
-      test('success full retrieval of version - from cache', () async {
+      test('successful retrieval of version - from cache', () async {
         var mock = new RepositoryMock();
         var cacheMock = new PackageCacheMock(getFun: expectAsync((String pkg) {
           expect(pkg, equals('analyzer'));
@@ -222,7 +222,7 @@ main() {
         expect(body, 'json response');
       });
 
-      test('success full retrieval of version - populate cache', () async {
+      test('successful retrieval of version - populate cache', () async {
         var mock = new RepositoryMock(versionsFun: (String package) {
           // The pubspec is invalid, but that is irrelevant for this test.
           var pubspec = JSON.encode({'foo': 1});
@@ -259,7 +259,7 @@ main() {
         expect(response.statusCode, equals(404));
       });
 
-      test('success full retrieval of version', () async {
+      test('successful retrieval of version', () async {
         var mock = new RepositoryMock(
             lookupVersionFun: (String package, String version) {
           // The pubspec is invalid, but that is irrelevant for this test.

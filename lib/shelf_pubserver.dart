@@ -274,11 +274,11 @@ class ShelfPubServer {
 
       // TODO: The 'latest' is something we should get rid of, since it's
       // duplicated in 'versions'.
-      var binaryJson = UTF8.encode(JSON.encode({
+      var binaryJson = JSON.encoder.fuse(UTF8.encoder).convert({
           'name' : package,
           'latest' : packageVersion2Json(latestVersion),
           'versions' : packageVersions.map(packageVersion2Json).toList(),
-      }));
+      });
       if (cache != null) {
         await cache.setPackageData(package, binaryJson);
       }
@@ -344,6 +344,7 @@ class ShelfPubServer {
         },
       });
     }).catchError((error, stack) {
+      _logger.warning('An error occured while finishing upload', error, stack);
       return _jsonResponse({
         'error' : {
           'message' : '$error.',
@@ -518,7 +519,6 @@ class ShelfPubServer {
   // Upload async urls.
 
   Uri _startUploadAsyncUrl(Uri url) {
-    var encode = Uri.encodeComponent;
     return url.resolve('/api/packages/versions/new');
   }
 
