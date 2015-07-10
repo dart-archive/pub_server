@@ -259,6 +259,18 @@ main() {
         expect(response.statusCode, equals(404));
       });
 
+      test('invalid version string', () async {
+        var mock = new RepositoryMock();
+        var server = new ShelfPubServer(mock);
+        var request = getRequest('/api/packages/analyzer/versions/0.1.0+%40');
+        var response = await server.requestHandler(request);
+        var body = await response.readAsString();
+
+        expect(response.statusCode, equals(400));
+        expect(JSON.decode(body)['error']['message'],
+               'Version string "0.1.0+@" is not a valid semantic version.');
+      });
+
       test('successful retrieval of version', () async {
         var mock = new RepositoryMock(
             lookupVersionFun: (String package, String version) {

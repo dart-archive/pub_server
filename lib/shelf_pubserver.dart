@@ -9,6 +9,7 @@ import 'dart:convert';
 
 import 'package:logging/logging.dart';
 import 'package:mime/mime.dart';
+import 'package:pub_semver/pub_semver.dart' as semver;
 import 'package:shelf/shelf.dart' as shelf;
 import 'package:yaml/yaml.dart';
 
@@ -157,6 +158,7 @@ class ShelfPubServer {
       if (downloadMatch != null) {
         var package = Uri.decodeComponent(downloadMatch.group(1));
         var version = Uri.decodeComponent(downloadMatch.group(2));
+        if (!isSemanticVersion(version)) return _invalidVersion(version);
         return _download(request.requestedUri, package, version);
       }
 
@@ -170,6 +172,7 @@ class ShelfPubServer {
       if (versionMatch != null) {
         var package = Uri.decodeComponent(versionMatch.group(1));
         var version = Uri.decodeComponent(versionMatch.group(2));
+        if (!isSemanticVersion(version)) return _invalidVersion(version);
         return _showVersion(request.requestedUri, package, version);
       }
 
@@ -460,6 +463,11 @@ class ShelfPubServer {
 
   // Helper functions.
 
+  Future<shelf.Response> _invalidVersion(String version) {
+    return _badRequest(
+        'Version string "$version" is not a valid semantic version.');
+  }
+
   Future<shelf.Response> _successfullRequest(String message) {
     return new Future.value(new shelf.Response(
         200,
@@ -536,6 +544,15 @@ class ShelfPubServer {
   Uri _finishUploadSimpleUrl(Uri url, {String error}) {
     var postfix = error == null ? '' : '?error=${Uri.encodeComponent(error)}';
     return url.resolve('/api/packages/versions/newUploadFinish$postfix');
+  }
+
+  bool isSemanticVersion(String version) {
+    try {
+      new semver.Version.parse(version);
+      return true;
+    } catch (_) {
+      return false;
+    }
   }
 }
 
