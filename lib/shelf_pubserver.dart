@@ -438,10 +438,10 @@ class ShelfPubServer {
         var user = Uri.decodeQueryComponent(parts[1]);
         await repository.addUploader(package, user);
         return _successfullRequest('Successfully added uploader to package.');
-      } on UploaderAlreadyExistsException catch (error, stack) {
+      } on UploaderAlreadyExistsException {
         return
             _badRequest('Cannot add an already-existent uploader to package.');
-      } on UnauthorizedAccessException catch (error, stack) {
+      } on UnauthorizedAccessException {
         return _unauthorizedRequest();
       }
     }
@@ -453,9 +453,9 @@ class ShelfPubServer {
     try {
       await repository.removeUploader(package, userEmail);
       return _successfullRequest('Successfully removed uploader from package.');
-    } on LastUploaderRemoveException catch (error, stack) {
+    } on LastUploaderRemoveException {
       return _badRequest('Cannot remove last uploader of a package.');
-    } on UnauthorizedAccessException catch (error, stack) {
+    } on UnauthorizedAccessException {
       return _unauthorizedRequest();
     }
   }
@@ -506,15 +506,6 @@ class ShelfPubServer {
     });
   }
 
-
-  // Metadata urls.
-
-  Uri _packageUrl(Uri url, String package) {
-    var encode = Uri.encodeComponent;
-    return url.resolve('/api/packages/${encode(package)}');
-  }
-
-
   // Download urls.
 
   Uri _downloadUrl(Uri url, String package, String version) {
@@ -525,10 +516,6 @@ class ShelfPubServer {
 
 
   // Upload async urls.
-
-  Uri _startUploadAsyncUrl(Uri url) {
-    return url.resolve('/api/packages/versions/new');
-  }
 
   Uri _finishUploadAsyncUrl(Uri url) {
     return url.resolve('/api/packages/versions/newUploadFinish');
