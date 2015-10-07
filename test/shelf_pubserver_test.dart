@@ -10,7 +10,7 @@ import 'dart:convert';
 import 'package:shelf/shelf.dart' as shelf;
 import 'package:pub_server/repository.dart';
 import 'package:pub_server/shelf_pubserver.dart';
-import 'package:unittest/unittest.dart';
+import 'package:test/test.dart';
 
 class RepositoryMock implements PackageRepository {
   final Function downloadFun;
