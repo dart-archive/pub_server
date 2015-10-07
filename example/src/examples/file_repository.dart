@@ -47,7 +47,8 @@ class FileRepository extends PackageRepository {
   Future<PackageVersion> lookupVersion(String package, String version) {
     return versions(package)
         .where((pv) => pv.versionString == version)
-        .toList().then((List<PackageVersion> versions) {
+        .toList()
+        .then((List<PackageVersion> versions) {
       if (versions.length >= 1) return versions.first;
       return null;
     });
@@ -89,7 +90,7 @@ class FileRepository extends PackageRepository {
         _logger.info('Uploaded new $package/$version');
       } else {
         _logger.warning('Did not find any pubspec.yaml file in upload. '
-                        'Aborting.');
+            'Aborting.');
         throw 'No pubspec file.';
       }
     });
@@ -109,9 +110,9 @@ class FileRepository extends PackageRepository {
     }
   }
 
-  String pubspecFilePath(String package, String version)
-      => path.join(baseDir, package, version, 'pubspec.yaml');
+  String pubspecFilePath(String package, String version) =>
+      path.join(baseDir, package, version, 'pubspec.yaml');
 
-  String packageTarballPath(String package, String version)
-      => path.join(baseDir, package, version, 'package.tar.gz');
+  String packageTarballPath(String package, String version) =>
+      path.join(baseDir, package, version, 'package.tar.gz');
 }

@@ -127,8 +127,7 @@ final Logger _logger = new Logger('pubserver.shelf_pubserver');
 /// It will use the pub [PackageRepository] given in the constructor to provide
 /// this HTTP endpoint.
 class ShelfPubServer {
-  static final RegExp _packageRegexp =
-      new RegExp(r'^/api/packages/([^/]+)$');
+  static final RegExp _packageRegexp = new RegExp(r'^/api/packages/([^/]+)$');
 
   static final RegExp _versionRegexp =
       new RegExp(r'^/api/packages/([^/]+)/versions/([^/]+)$');
@@ -144,12 +143,10 @@ class ShelfPubServer {
 
   static final RegExp _boundaryRegExp = new RegExp(r'^.*boundary="([^"]+)"$');
 
-
   final PackageRepository repository;
   final PackageCache cache;
 
   ShelfPubServer(this.repository, {this.cache});
-
 
   Future<shelf.Response> requestHandler(shelf.Request request) {
     String path = request.requestedUri.path;
@@ -205,10 +202,8 @@ class ShelfPubServer {
           return new Future.value(new shelf.Response.notFound(null));
         }
 
-        return _uploadSimple(
-            request.requestedUri,
-            request.headers['content-type'],
-            request.read());
+        return _uploadSimple(request.requestedUri,
+            request.headers['content-type'], request.read());
       } else {
         if (!repository.supportsUploaders) {
           return new Future.value(new shelf.Response.notFound(null));
@@ -237,7 +232,6 @@ class ShelfPubServer {
     return new Future.value(new shelf.Response.notFound(null));
   }
 
-
   // Metadata handlers.
 
   Future<shelf.Response> _listVersions(Uri uri, String package) async {
@@ -248,7 +242,9 @@ class ShelfPubServer {
       }
     }
 
-    return repository.versions(package).toList()
+    return repository
+        .versions(package)
+        .toList()
         .then((List<PackageVersion> packageVersions) async {
       if (packageVersions.length == 0) {
         return new shelf.Response.notFound(null);
@@ -259,8 +255,7 @@ class ShelfPubServer {
       // TODO: Add legacy entries (if necessary), such as version_url.
       Map packageVersion2Json(PackageVersion version) {
         return {
-          'archive_url':
-              '${_downloadUrl(
+          'archive_url': '${_downloadUrl(
                   uri, version.packageName, version.versionString)}',
           'pubspec': loadYaml(version.pubspecYaml),
           'version': version.versionString,
@@ -278,9 +273,9 @@ class ShelfPubServer {
       // TODO: The 'latest' is something we should get rid of, since it's
       // duplicated in 'versions'.
       var binaryJson = JSON.encoder.fuse(UTF8.encoder).convert({
-          'name' : package,
-          'latest' : packageVersion2Json(latestVersion),
-          'versions' : packageVersions.map(packageVersion2Json).toList(),
+        'name': package,
+        'latest': packageVersion2Json(latestVersion),
+        'versions': packageVersions.map(packageVersion2Json).toList(),
       });
       if (cache != null) {
         await cache.setPackageData(package, binaryJson);
@@ -291,22 +286,21 @@ class ShelfPubServer {
 
   Future<shelf.Response> _showVersion(Uri uri, String package, String version) {
     return repository
-        .lookupVersion(package, version).then((PackageVersion version) {
-          if (version == null) {
-            return new shelf.Response.notFound('');
-          }
+        .lookupVersion(package, version)
+        .then((PackageVersion version) {
+      if (version == null) {
+        return new shelf.Response.notFound('');
+      }
 
-          // TODO: Add legacy entries (if necessary), such as version_url.
-          return _jsonResponse({
-            'archive_url':
-                '${_downloadUrl(
+      // TODO: Add legacy entries (if necessary), such as version_url.
+      return _jsonResponse({
+        'archive_url': '${_downloadUrl(
                     uri, version.packageName, version.versionString)}',
-            'pubspec': loadYaml(version.pubspecYaml),
-            'version': version.versionString,
-          });
+        'pubspec': loadYaml(version.pubspecYaml),
+        'version': version.versionString,
+      });
     });
   }
-
 
   // Download handlers.
 
@@ -322,16 +316,13 @@ class ShelfPubServer {
     });
   }
 
-
   // Upload async handlers.
 
   Future<shelf.Response> _startUploadAsync(Uri uri) {
-    return repository.startAsyncUpload(_finishUploadAsyncUrl(uri))
+    return repository
+        .startAsyncUpload(_finishUploadAsyncUrl(uri))
         .then((AsyncUploadInfo info) {
-      return _jsonResponse({
-        'url' : '${info.uri}',
-        'fields' : info.fields,
-      });
+      return _jsonResponse({'url': '${info.uri}', 'fields': info.fields,});
     });
   }
 
@@ -342,29 +333,21 @@ class ShelfPubServer {
         await cache.invalidatePackageData(vers.packageName);
       }
       return _jsonResponse({
-        'success' : {
-          'message' : 'Successfully uploaded package.',
-        },
+        'success': {'message': 'Successfully uploaded package.',},
       });
     }).catchError((error, stack) {
       _logger.warning('An error occured while finishing upload', error, stack);
       return _jsonResponse({
-        'error' : {
-          'message' : '$error.',
-        },
+        'error': {'message': '$error.',},
       }, status: 400);
     });
   }
-
 
   // Upload custom handlers.
 
   Future<shelf.Response> _startUploadSimple(Uri url) {
     _logger.info('Start simple upload.');
-    return _jsonResponse({
-      'url' : '${_uploadSimpleUrl(url)}',
-      'fields' : {},
-    });
+    return _jsonResponse({'url': '${_uploadSimpleUrl(url)}', 'fields': {},});
   }
 
   Future<shelf.Response> _uploadSimple(
@@ -414,8 +397,8 @@ class ShelfPubServer {
         return completer.future;
       }
     }
-    return
-        _badRequest('Upload must contain a multipart/form-data content type.');
+    return _badRequest(
+        'Upload must contain a multipart/form-data content type.');
   }
 
   Future<shelf.Response> _finishUploadSimple(Uri uri) {
@@ -424,10 +407,10 @@ class ShelfPubServer {
     if (error != null) {
       return _badRequest(error);
     }
-    return _jsonResponse(
-        { 'success' : { 'message' : 'Successfully uploaded package.' } });
+    return _jsonResponse({
+      'success': {'message': 'Successfully uploaded package.'}
+    });
   }
-
 
   // Uploader handlers.
 
@@ -439,8 +422,8 @@ class ShelfPubServer {
         await repository.addUploader(package, user);
         return _successfullRequest('Successfully added uploader to package.');
       } on UploaderAlreadyExistsException {
-        return
-            _badRequest('Cannot add an already-existent uploader to package.');
+        return _badRequest(
+            'Cannot add an already-existent uploader to package.');
       } on UnauthorizedAccessException {
         return _unauthorizedRequest();
       }
@@ -448,8 +431,8 @@ class ShelfPubServer {
     return _badRequest('Invalid request');
   }
 
-  Future<shelf.Response> removeUploader(String package,
-                                        String userEmail) async {
+  Future<shelf.Response> removeUploader(
+      String package, String userEmail) async {
     try {
       await repository.removeUploader(package, userEmail);
       return _successfullRequest('Successfully removed uploader from package.');
@@ -460,7 +443,6 @@ class ShelfPubServer {
     }
   }
 
-
   // Helper functions.
 
   Future<shelf.Response> _invalidVersion(String version) {
@@ -469,24 +451,26 @@ class ShelfPubServer {
   }
 
   Future<shelf.Response> _successfullRequest(String message) {
-    return new Future.value(new shelf.Response(
-        200,
-        body: JSON.encode({ 'success' : { 'message' : message } }),
+    return new Future.value(new shelf.Response(200,
+        body: JSON.encode({
+          'success': {'message': message}
+        }),
         headers: {'content-type': 'application/json'}));
   }
 
-
   Future<shelf.Response> _unauthorizedRequest() {
-    return new Future.value(new shelf.Response(
-        403,
-        body: JSON.encode({'error' : { 'message' : 'Unauthorized request.'}}),
+    return new Future.value(new shelf.Response(403,
+        body: JSON.encode({
+          'error': {'message': 'Unauthorized request.'}
+        }),
         headers: {'content-type': 'application/json'}));
   }
 
   Future<shelf.Response> _badRequest(String message) {
-    return new Future.value(new shelf.Response(
-        400,
-        body: JSON.encode({ 'error' : { 'message' : message } }),
+    return new Future.value(new shelf.Response(400,
+        body: JSON.encode({
+          'error': {'message': message}
+        }),
         headers: {'content-type': 'application/json'}));
   }
 
@@ -514,13 +498,11 @@ class ShelfPubServer {
         '/packages/${encode(package)}/versions/${encode(version)}.tar.gz');
   }
 
-
   // Upload async urls.
 
   Uri _finishUploadAsyncUrl(Uri url) {
     return url.resolve('/api/packages/versions/newUploadFinish');
   }
-
 
   // Upload custom urls.
 
@@ -542,7 +524,6 @@ class ShelfPubServer {
     }
   }
 }
-
 
 /// A cache for storing metadata for packages.
 abstract class PackageCache {

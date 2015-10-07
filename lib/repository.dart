@@ -33,16 +33,15 @@ class PackageVersion {
   int get hashCode =>
       packageName.hashCode ^ versionString.hashCode ^ pubspecYaml.hashCode;
 
-  bool operator==(other) {
+  bool operator ==(other) {
     return other is PackageVersion &&
-           other.packageName == packageName &&
-           other.versionString == versionString &&
-           other.pubspecYaml == pubspecYaml;
+        other.packageName == packageName &&
+        other.versionString == versionString &&
+        other.pubspecYaml == pubspecYaml;
   }
 
   String toString() => 'PackageVersion: $packageName/$versionString';
 }
-
 
 /// Information obtained when starting an asynchronous upload.
 class AsyncUploadInfo {
@@ -78,7 +77,7 @@ class LastUploaderRemoveException implements Exception {
   LastUploaderRemoveException();
 
   String toString() => 'LastUploaderRemoved: Cannot remove last uploader of a '
-                       'package.';
+      'package.';
 }
 
 /// Exception for adding an already-existent uploader.
@@ -89,7 +88,7 @@ class UploaderAlreadyExistsException implements Exception {
   UploaderAlreadyExistsException();
 
   String toString() => 'UploaderAlreadyExists: Cannot add an already existent '
-                       'uploader.';
+      'uploader.';
 }
 
 /// Represents a pub repository.
@@ -100,15 +99,14 @@ abstract class PackageRepository {
   /// Whether the [version] of [package] exists.
   Future<PackageVersion> lookupVersion(String package, String version);
 
-
   /// Whether this package repository supports uploading packages.
   bool get supportsUpload => false;
 
   /// Uploads a new pub package.
   ///
   /// [data] must be a stream of a valid .tar.gz file.
-  Future<PackageVersion> upload(Stream<List<int>> data)
-      => new Future.error(new UnsupportedError('No upload support.'));
+  Future<PackageVersion> upload(Stream<List<int>> data) =>
+      new Future.error(new UnsupportedError('No upload support.'));
 
   /// Whether this package repository supports asynchronous uploads.
   bool get supportsAsyncUpload => false;
@@ -121,13 +119,12 @@ abstract class PackageRepository {
   ///
   /// The returned [AsyncUploadInfo] specifies where the tar.gz file should be
   /// posted to and what headers should be supplied.
-  Future<AsyncUploadInfo> startAsyncUpload(Uri redirectUrl)
-      => new Future.error(new UnsupportedError('No async upload support.'));
+  Future<AsyncUploadInfo> startAsyncUpload(Uri redirectUrl) =>
+      new Future.error(new UnsupportedError('No async upload support.'));
 
   /// Finishes the upload of a package.
-  Future<PackageVersion> finishAsyncUpload(Uri uri)
-      => new Future.error(new UnsupportedError('No async upload support.'));
-
+  Future<PackageVersion> finishAsyncUpload(Uri uri) =>
+      new Future.error(new UnsupportedError('No async upload support.'));
 
   /// Downloads a pub package.
   Future<Stream> download(String package, String version);
@@ -136,17 +133,17 @@ abstract class PackageRepository {
   bool get supportsDownloadUrl => false;
 
   /// A permanent download URL to a package (if supported).
-  Future<Uri> downloadUrl(String package, String version)
-      => new Future.error(new UnsupportedError('No download link support.'));
+  Future<Uri> downloadUrl(String package, String version) =>
+      new Future.error(new UnsupportedError('No download link support.'));
 
   /// Whether this package repository supports adding/removing users.
   bool get supportsUploaders => false;
 
   /// Adds [userEmail] as an uploader to [package].
-  Future addUploader(String package, String userEmail)
-      => new Future.error(new UnsupportedError('No uploader support.'));
+  Future addUploader(String package, String userEmail) =>
+      new Future.error(new UnsupportedError('No uploader support.'));
 
   /// Removes [userEmail] as an uploader from [package].
-  Future removeUploader(String package, String userEmail)
-      => new Future.error(new UnsupportedError('No uploader support.'));
+  Future removeUploader(String package, String userEmail) =>
+      new Future.error(new UnsupportedError('No uploader support.'));
 }
