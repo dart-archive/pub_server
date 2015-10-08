@@ -16,7 +16,6 @@ import 'src/examples/cow_repository.dart';
 
 final Uri PubDartLangOrg = Uri.parse('https://pub.dartlang.org');
 
-
 main(List<String> args) {
   var parser = argsParser();
   var results = parser.parse(args);
@@ -44,11 +43,11 @@ runPubServer(String baseDir, String host, int port) {
 
   var server = new ShelfPubServer(cow);
   print('Listening on http://$host:$port\n'
-        '\n'
-        'To make the pub client use this repository configure your shell via:\n'
-        '\n'
-        '    \$ export PUB_HOSTED_URL=http://$host:$port\n'
-        '\n');
+      '\n'
+      'To make the pub client use this repository configure your shell via:\n'
+      '\n'
+      '    \$ export PUB_HOSTED_URL=http://$host:$port\n'
+      '\n');
   return shelf_io.serve(server.requestHandler, host, port);
 }
 
@@ -56,16 +55,11 @@ ArgParser argsParser() {
   var parser = new ArgParser();
 
   parser.addOption('directory',
-                   abbr: 'd',
-                   defaultsTo: 'pub_server-repository-data');
+      abbr: 'd', defaultsTo: 'pub_server-repository-data');
 
-  parser.addOption('host',
-                   abbr: 'h',
-                   defaultsTo: 'localhost');
+  parser.addOption('host', abbr: 'h', defaultsTo: 'localhost');
 
-  parser.addOption('port',
-                   abbr: 'p',
-                   defaultsTo: '8080');
+  parser.addOption('port', abbr: 'p', defaultsTo: '8080');
   return parser;
 }
 

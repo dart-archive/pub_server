@@ -25,8 +25,8 @@ class HttpProxyRepository extends PackageRepository {
 
   Stream<PackageVersion> versions(String package) {
     Future<List<PackageVersion>> fetch() async {
-      Uri versionUrl = baseUrl.resolve(
-          '/api/packages/${Uri.encodeComponent(package)}');
+      Uri versionUrl =
+          baseUrl.resolve('/api/packages/${Uri.encodeComponent(package)}');
 
       http.Response response = await client.get(versionUrl);
       var json = JSON.decode(response.body);
@@ -59,7 +59,8 @@ class HttpProxyRepository extends PackageRepository {
   Future<PackageVersion> lookupVersion(String package, String version) {
     return versions(package)
         .where((v) => v.packageName == package && v.versionString == version)
-        .toList().then((List<PackageVersion> versions) {
+        .toList()
+        .then((List<PackageVersion> versions) {
       if (versions.length >= 1) return versions.first;
       return null;
     });

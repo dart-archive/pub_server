@@ -39,11 +39,11 @@ class CopyAndWriteRepository extends PackageRepository {
     var controller;
 
     onListen() {
-      Future.wait([_localCache.fetchVersionlist(package),
-                   _remoteCache.fetchVersionlist(package)]).then((tuple) {
-        var versions = new Set()
-            ..addAll(tuple[0])
-            ..addAll(tuple[1]);
+      Future.wait([
+        _localCache.fetchVersionlist(package),
+        _remoteCache.fetchVersionlist(package)
+      ]).then((tuple) {
+        var versions = new Set()..addAll(tuple[0])..addAll(tuple[1]);
         for (var version in versions) controller.add(version);
         controller.close();
       });
@@ -56,7 +56,8 @@ class CopyAndWriteRepository extends PackageRepository {
   Future<PackageVersion> lookupVersion(String package, String version) {
     return versions(package)
         .where((pv) => pv.versionString == version)
-        .toList().then((List<PackageVersion> versions) {
+        .toList()
+        .then((List<PackageVersion> versions) {
       if (versions.length >= 1) return versions.first;
       return null;
     });
@@ -92,7 +93,7 @@ class CopyAndWriteRepository extends PackageRepository {
     // package:mime - making this an async scope results in this stream getting
     // no data.
     return local.upload(data).then((data) {
-        // TODO: It's not really necessary to invalidate all.
+      // TODO: It's not really necessary to invalidate all.
       _logger.info('Upload finished. Invalidating in-memory cache.');
       _localCache.invalidateAll();
     });
