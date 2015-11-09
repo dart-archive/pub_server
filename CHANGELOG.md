@@ -1,3 +1,7 @@
+## 0.1.1+2
+
+* Fixed null comparision.
+
 ## 0.1.1+1
 
 * Updated dependencies.

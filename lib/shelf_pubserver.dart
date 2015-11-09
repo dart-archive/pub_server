@@ -210,7 +210,7 @@ class ShelfPubServer {
         }
 
         var addUploaderMatch = _addUploaderRegexp.matchAsPrefix(path);
-        if (addUploaderMatch != 0) {
+        if (addUploaderMatch != null) {
           String package = Uri.decodeComponent(addUploaderMatch.group(1));
           return request.readAsString().then((String body) {
             return _addUploader(package, body);
@@ -223,7 +223,7 @@ class ShelfPubServer {
       }
 
       var removeUploaderMatch = _removeUploaderRegexp.matchAsPrefix(path);
-      if (removeUploaderMatch != 0) {
+      if (removeUploaderMatch != null) {
         String package = Uri.decodeComponent(removeUploaderMatch.group(1));
         String user = Uri.decodeComponent(removeUploaderMatch.group(2));
         return removeUploader(package, user);
