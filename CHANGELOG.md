@@ -1,3 +1,7 @@
+## 0.1.1+3
+
+* Support the latest release of `pub_semver`.
+
 ## 0.1.1+2
 
 * Fixed null comparision.
