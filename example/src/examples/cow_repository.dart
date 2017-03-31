@@ -25,25 +25,32 @@ class CopyAndWriteRepository extends PackageRepository {
   final PackageRepository remote;
   final _RemoteMetadataCache _localCache;
   final _RemoteMetadataCache _remoteCache;
+  final bool standalone;
 
   /// Construct a new proxy with [local] as the local [PackageRepository] which
   /// is used for uploading new package versions to and [remote] as the
   /// read-only [PackageRepository] which is consulted on misses in [local].
-  CopyAndWriteRepository(PackageRepository local, PackageRepository remote)
+  CopyAndWriteRepository(PackageRepository local, PackageRepository remote, bool standalone)
       : this.local = local,
         this.remote = remote,
+        this.standalone = standalone,
         this._localCache = new _RemoteMetadataCache(local),
         this._remoteCache = new _RemoteMetadataCache(remote);
 
   Stream<PackageVersion> versions(String package) {
     var controller;
-
     onListen() {
-      Future.wait([
-        _localCache.fetchVersionlist(package),
-        _remoteCache.fetchVersionlist(package)
-      ]).then((tuple) {
-        var versions = new Set()..addAll(tuple[0])..addAll(tuple[1]);
+      var waitList = [
+        _localCache.fetchVersionlist(package)
+      ];
+      if(standalone != true){
+        waitList..add(_remoteCache.fetchVersionlist(package));
+      }
+      Future.wait(waitList).then((tuple) {
+        var versions = new Set()..addAll(tuple[0]);
+        if(standalone != true){
+          versions..addAll(tuple[1]);
+        }
         for (var version in versions) controller.add(version);
         controller.close();
       });
