@@ -23,7 +23,7 @@ main(List<String> args) {
   var directory = results['directory'];
   var host = results['host'];
   var port = int.parse(results['port']);
-  var standalone = results['standalone'] == 'true';
+  var standalone = results['standalone'];
 
   if (results.rest.length > 0) {
     print('Got unexpected arguments: "${results.rest.join(' ')}".\n\nUsage:\n');
@@ -61,7 +61,7 @@ ArgParser argsParser() {
   parser.addOption('host', abbr: 'h', defaultsTo: 'localhost');
 
   parser.addOption('port', abbr: 'p', defaultsTo: '8080');
-  parser.addOption('standalone', abbr: 's', defaultsTo: 'false');
+  parser.addFlag('standalone', abbr: 's', defaultsTo: false);
   return parser;
 }
 

@@ -43,13 +43,13 @@ class CopyAndWriteRepository extends PackageRepository {
       var waitList = [
         _localCache.fetchVersionlist(package)
       ];
-      if(standalone != true){
-        waitList..add(_remoteCache.fetchVersionlist(package));
+      if (standalone != true) {
+        waitList.add(_remoteCache.fetchVersionlist(package));
       }
       Future.wait(waitList).then((tuple) {
         var versions = new Set()..addAll(tuple[0]);
-        if(standalone != true){
-          versions..addAll(tuple[1]);
+        if (standalone != true) {
+          versions.addAll(tuple[1]);
         }
         for (var version in versions) controller.add(version);
         controller.close();
