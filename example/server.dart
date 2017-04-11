@@ -23,23 +23,24 @@ main(List<String> args) {
   var directory = results['directory'];
   var host = results['host'];
   var port = int.parse(results['port']);
+  var standalone = results['standalone'];
 
   if (results.rest.length > 0) {
     print('Got unexpected arguments: "${results.rest.join(' ')}".\n\nUsage:\n');
     print(parser.usage);
     exit(1);
   }
-
+  
   setupLogger();
-  runPubServer(directory, host, port);
+  runPubServer(directory, host, port, standalone);
 }
 
-runPubServer(String baseDir, String host, int port) {
+runPubServer(String baseDir, String host, int port, bool standalone) {
   var client = new http.Client();
 
   var local = new FileRepository(baseDir);
   var remote = new HttpProxyRepository(client, PubDartLangOrg);
-  var cow = new CopyAndWriteRepository(local, remote);
+  var cow = new CopyAndWriteRepository(local, remote, standalone);
 
   var server = new ShelfPubServer(cow);
   print('Listening on http://$host:$port\n'
@@ -60,6 +61,7 @@ ArgParser argsParser() {
   parser.addOption('host', abbr: 'h', defaultsTo: 'localhost');
 
   parser.addOption('port', abbr: 'p', defaultsTo: '8080');
+  parser.addFlag('standalone', abbr: 's', defaultsTo: false);
   return parser;
 }
 
