@@ -410,8 +410,7 @@ main() {
           var mock = new RepositoryMock(
               supportsUpload: true,
               uploadFun: (Stream<List<int>> stream) {
-                return stream
-                    .fold([], (b, d) => b..addAll(d)).then((List<int> d) {
+                return stream.fold([], (b, d) => b..addAll(d)).then((d) {
                   expect(d, equals(tarballBytes));
                   return new PackageVersion('foobar', '0.1.0', '');
                 });
@@ -441,7 +440,7 @@ main() {
           // Post data via a multipart request.
           request = multipartRequest(uploadUrl, tarballBytes);
           response = await server.requestHandler(request);
-          await response.read();
+          await response.read().drain();
           expect(response.statusCode, equals(302));
           expect(response.headers['location'], equals('$finishUrl'));
 
@@ -474,7 +473,7 @@ main() {
         // Post data via a multipart request.
         var request = multipartRequest(uploadUrl, tarballBytes);
         var response = await server.requestHandler(request);
-        await response.read();
+        await response.read().drain();
         expect(response.statusCode, equals(302));
         expect(response.headers['location'], equals('$finishUrl'));
 

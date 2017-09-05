@@ -28,7 +28,7 @@ class FileRepository extends PackageRepository {
       return directory
           .list(recursive: false)
           .where((fse) => fse is Directory)
-          .map((Directory dir) {
+          .map((dir) {
         var version = path.basename(dir.path);
         var pubspecFile = new File(pubspecFilePath(package, version));
         var tarballFile = new File(packageTarballPath(package, version));
@@ -56,7 +56,7 @@ class FileRepository extends PackageRepository {
 
   bool get supportsUpload => true;
 
-  Future upload(Stream<List<int>> data) {
+  Future<PackageVersion> upload(Stream<List<int>> data) {
     _logger.info('Start uploading package.');
     return data.fold(new BytesBuilder(), (b, d) => b..add(d)).then((bb) {
       var tarballBytes = bb.takeBytes();

@@ -92,7 +92,7 @@ class CopyAndWriteRepository extends PackageRepository {
 
   bool get supportsUpload => true;
 
-  Future upload(Stream<List<int>> data) {
+  Future<PackageVersion> upload(Stream<List<int>> data) {
     _logger.info('Starting upload to local package repository.');
     // TODO: Converting this to an async scope makes the stream not get any data
     // or done event. Seems like there is still an issue in
@@ -115,8 +115,8 @@ class CopyAndWriteRepository extends PackageRepository {
 class _RemoteMetadataCache {
   final PackageRepository remote;
 
-  Map<String, Set<PackageVersion>> _versions = {};
-  Map<String, Completer<Set<PackageVersion>>> _versionCompleters = {};
+  final Map<String, Set<PackageVersion>> _versions = {};
+  final Map<String, Completer<Set<PackageVersion>>> _versionCompleters = {};
 
   _RemoteMetadataCache(this.remote);
 
