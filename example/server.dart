@@ -30,7 +30,7 @@ main(List<String> args) {
     print(parser.usage);
     exit(1);
   }
-  
+
   setupLogger();
   runPubServer(directory, host, port, standalone);
 }

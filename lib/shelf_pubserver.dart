@@ -322,7 +322,10 @@ class ShelfPubServer {
     return repository
         .startAsyncUpload(_finishUploadAsyncUrl(uri))
         .then((AsyncUploadInfo info) {
-      return _jsonResponse({'url': '${info.uri}', 'fields': info.fields,});
+      return _jsonResponse({
+        'url': '${info.uri}',
+        'fields': info.fields,
+      });
     });
   }
 
@@ -333,12 +336,16 @@ class ShelfPubServer {
         await cache.invalidatePackageData(vers.packageName);
       }
       return _jsonResponse({
-        'success': {'message': 'Successfully uploaded package.',},
+        'success': {
+          'message': 'Successfully uploaded package.',
+        },
       });
     }).catchError((error, stack) {
       _logger.warning('An error occured while finishing upload', error, stack);
       return _jsonResponse({
-        'error': {'message': '$error.',},
+        'error': {
+          'message': '$error.',
+        },
       }, status: 400);
     });
   }
@@ -347,7 +354,10 @@ class ShelfPubServer {
 
   Future<shelf.Response> _startUploadSimple(Uri url) {
     _logger.info('Start simple upload.');
-    return _jsonResponse({'url': '${_uploadSimpleUrl(url)}', 'fields': {},});
+    return _jsonResponse({
+      'url': '${_uploadSimpleUrl(url)}',
+      'fields': {},
+    });
   }
 
   Future<shelf.Response> _uploadSimple(

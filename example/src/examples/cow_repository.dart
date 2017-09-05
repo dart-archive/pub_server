@@ -30,7 +30,8 @@ class CopyAndWriteRepository extends PackageRepository {
   /// Construct a new proxy with [local] as the local [PackageRepository] which
   /// is used for uploading new package versions to and [remote] as the
   /// read-only [PackageRepository] which is consulted on misses in [local].
-  CopyAndWriteRepository(PackageRepository local, PackageRepository remote, bool standalone)
+  CopyAndWriteRepository(
+      PackageRepository local, PackageRepository remote, bool standalone)
       : this.local = local,
         this.remote = remote,
         this.standalone = standalone,
@@ -40,9 +41,7 @@ class CopyAndWriteRepository extends PackageRepository {
   Stream<PackageVersion> versions(String package) {
     var controller;
     onListen() {
-      var waitList = [
-        _localCache.fetchVersionlist(package)
-      ];
+      var waitList = [_localCache.fetchVersionlist(package)];
       if (standalone != true) {
         waitList.add(_remoteCache.fetchVersionlist(package));
       }
@@ -124,17 +123,20 @@ class _RemoteMetadataCache {
   // TODO: After a cache expiration we should invalidate entries and re-fetch
   // them.
   Future<List<PackageVersion>> fetchVersionlist(String package) {
-    return _versionCompleters.putIfAbsent(package, () {
-      var c = new Completer();
+    return _versionCompleters
+        .putIfAbsent(package, () {
+          var c = new Completer();
 
-      _versions.putIfAbsent(package, () => new Set());
-      remote.versions(package).toList().then((versions) {
-        _versions[package].addAll(versions);
-        c.complete(_versions[package]);
-      });
+          _versions.putIfAbsent(package, () => new Set());
+          remote.versions(package).toList().then((versions) {
+            _versions[package].addAll(versions);
+            c.complete(_versions[package]);
+          });
 
-      return c;
-    }).future.then((set) => set.toList());
+          return c;
+        })
+        .future
+        .then((set) => set.toList());
   }
 
   void addVersion(String package, PackageVersion version) {
