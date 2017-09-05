@@ -212,7 +212,7 @@ main() {
 
       test('successful retrieval of version - from cache', () async {
         var mock = new RepositoryMock();
-        var cacheMock = new PackageCacheMock(getFun: expectAsync((String pkg) {
+        var cacheMock = new PackageCacheMock(getFun: expectAsync1((String pkg) {
           expect(pkg, equals('analyzer'));
           return UTF8.encode('json response');
         }));
@@ -233,10 +233,10 @@ main() {
           var analyzer = new PackageVersion('analyzer', '0.1.0', pubspec);
           return new Stream.fromIterable([analyzer]);
         });
-        var cacheMock = new PackageCacheMock(getFun: expectAsync((String pkg) {
+        var cacheMock = new PackageCacheMock(getFun: expectAsync1((String pkg) {
           expect(pkg, equals('analyzer'));
           return null;
-        }), setFun: expectAsync((String package, List<int> data) {
+        }), setFun: expectAsync2((String package, List<int> data) {
           expect(package, equals('analyzer'));
           expect(JSON.decode(UTF8.decode(data)), equals(expectedJson));
         }));
@@ -359,7 +359,7 @@ main() {
           var cacheMock;
           if (useMemcache) {
             cacheMock = new PackageCacheMock(
-                invalidateFun: expectAsync((String package) {
+                invalidateFun: expectAsync1((String package) {
               expect(package, equals('foobar'));
             }));
           }
@@ -412,7 +412,7 @@ main() {
           var cacheMock;
           if (useMemcache) {
             cacheMock = new PackageCacheMock(
-                invalidateFun: expectAsync((String package) {
+                invalidateFun: expectAsync1((String package) {
               expect(package, equals('foobar'));
             }));
           }
@@ -503,7 +503,7 @@ main() {
 
         test('success', () async {
           var mock = new RepositoryMock(supportsUploaders: true,
-              addUploaderFun: expectAsync((package, user) {
+              addUploaderFun: expectAsync2((package, user) {
             expect(package, equals('pkg'));
             expect(user, equals('hans'));
           }));
@@ -556,7 +556,7 @@ main() {
 
         test('success', () async {
           var mock = new RepositoryMock(supportsUploaders: true,
-              removeUploaderFun: expectAsync((package, user) {
+              removeUploaderFun: expectAsync2((package, user) {
             expect(package, equals('pkg'));
             expect(user, equals('hans'));
           }));
