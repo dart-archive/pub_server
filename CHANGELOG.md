@@ -1,3 +1,7 @@
+## 0.1.1+4
+
+* Support the latest version of `pkg/shelf`.
+
 ## 0.1.1+3
 
 * Support the latest release of `pub_semver`.

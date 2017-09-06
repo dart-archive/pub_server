@@ -212,7 +212,7 @@ main() {
 
       test('successful retrieval of version - from cache', () async {
         var mock = new RepositoryMock();
-        var cacheMock = new PackageCacheMock(getFun: expectAsync((String pkg) {
+        var cacheMock = new PackageCacheMock(getFun: expectAsync1((String pkg) {
           expect(pkg, equals('analyzer'));
           return UTF8.encode('json response');
         }));
@@ -233,10 +233,10 @@ main() {
           var analyzer = new PackageVersion('analyzer', '0.1.0', pubspec);
           return new Stream.fromIterable([analyzer]);
         });
-        var cacheMock = new PackageCacheMock(getFun: expectAsync((String pkg) {
+        var cacheMock = new PackageCacheMock(getFun: expectAsync1((String pkg) {
           expect(pkg, equals('analyzer'));
           return null;
-        }), setFun: expectAsync((String package, List<int> data) {
+        }), setFun: expectAsync2((String package, List<int> data) {
           expect(package, equals('analyzer'));
           expect(JSON.decode(UTF8.decode(data)), equals(expectedJson));
         }));
@@ -322,10 +322,11 @@ main() {
         test('successfull redirect', () async {
           var expectedUrl =
               Uri.parse('https://blobs.com/analyzer-0.1.0.tar.gz');
-          var mock = new RepositoryMock(supportsDownloadUrl: true,
+          var mock = new RepositoryMock(
+              supportsDownloadUrl: true,
               downloadUrlFun: (String package, String version) {
-            return expectedUrl;
-          });
+                return expectedUrl;
+              });
           var server = new ShelfPubServer(mock);
           var request = getRequest('/packages/analyzer/versions/0.1.0.tar.gz');
           var response = await server.requestHandler(request);
@@ -347,19 +348,21 @@ main() {
           var newUrl = getUri('/api/packages/versions/new');
           var finishUrl = getUri('/api/packages/versions/newUploadFinish');
           var mock = new RepositoryMock(
-              supportsUpload: true, supportsAsyncUpload: true,
+              supportsUpload: true,
+              supportsAsyncUpload: true,
               startAsyncUploadFun: (Uri redirectUri) {
-            expect(redirectUri, equals(finishUrl));
-            return new Future.value(
-                new AsyncUploadInfo(expectedUrl, {'a': '$foobarUrl'}));
-          }, finishAsyncUploadFun: (Uri uri) {
-            expect('$uri', equals('$finishUrl'));
-            return new PackageVersion('foobar', '0.1.0', '');
-          });
+                expect(redirectUri, equals(finishUrl));
+                return new Future.value(
+                    new AsyncUploadInfo(expectedUrl, {'a': '$foobarUrl'}));
+              },
+              finishAsyncUploadFun: (Uri uri) {
+                expect('$uri', equals('$finishUrl'));
+                return new PackageVersion('foobar', '0.1.0', '');
+              });
           var cacheMock;
           if (useMemcache) {
             cacheMock = new PackageCacheMock(
-                invalidateFun: expectAsync((String package) {
+                invalidateFun: expectAsync1((String package) {
               expect(package, equals('foobar'));
             }));
           }
@@ -378,7 +381,9 @@ main() {
               jsonBody,
               equals({
                 'url': '$expectedUrl',
-                'fields': {'a': '$foobarUrl',},
+                'fields': {
+                  'a': '$foobarUrl',
+                },
               }));
 
           // We would do now a multipart POST to `expectedUrl` which would
@@ -402,17 +407,18 @@ main() {
           var newUrl = getUri('/api/packages/versions/new');
           var uploadUrl = getUri('/api/packages/versions/newUpload');
           var finishUrl = getUri('/api/packages/versions/newUploadFinish');
-          var mock = new RepositoryMock(supportsUpload: true,
+          var mock = new RepositoryMock(
+              supportsUpload: true,
               uploadFun: (Stream<List<int>> stream) {
-            return stream.fold([], (b, d) => b..addAll(d)).then((List<int> d) {
-              expect(d, equals(tarballBytes));
-              return new PackageVersion('foobar', '0.1.0', '');
-            });
-          });
+                return stream.fold([], (b, d) => b..addAll(d)).then((d) {
+                  expect(d, equals(tarballBytes));
+                  return new PackageVersion('foobar', '0.1.0', '');
+                });
+              });
           var cacheMock;
           if (useMemcache) {
             cacheMock = new PackageCacheMock(
-                invalidateFun: expectAsync((String package) {
+                invalidateFun: expectAsync1((String package) {
               expect(package, equals('foobar'));
             }));
           }
@@ -424,12 +430,17 @@ main() {
           expect(response.statusCode, equals(200));
           expect(response.headers['content-type'], equals('application/json'));
           var jsonBody = JSON.decode(await response.readAsString());
-          expect(jsonBody, equals({'url': '$uploadUrl', 'fields': {},}));
+          expect(
+              jsonBody,
+              equals({
+                'url': '$uploadUrl',
+                'fields': {},
+              }));
 
           // Post data via a multipart request.
           request = multipartRequest(uploadUrl, tarballBytes);
           response = await server.requestHandler(request);
-          await response.read();
+          await response.read().drain();
           expect(response.statusCode, equals(302));
           expect(response.headers['location'], equals('$finishUrl'));
 
@@ -450,10 +461,11 @@ main() {
         var uploadUrl = getUri('/api/packages/versions/newUpload');
         var finishUrl =
             getUri('/api/packages/versions/newUploadFinish?error=abc');
-        var mock = new RepositoryMock(supportsUpload: true,
+        var mock = new RepositoryMock(
+            supportsUpload: true,
             uploadFun: (Stream<List<int>> stream) {
-          return new Future.error('abc');
-        });
+              return new Future.error('abc');
+            });
         var server = new ShelfPubServer(mock);
 
         // Start upload - would happen here.
@@ -461,7 +473,7 @@ main() {
         // Post data via a multipart request.
         var request = multipartRequest(uploadUrl, tarballBytes);
         var response = await server.requestHandler(request);
-        await response.read();
+        await response.read().drain();
         expect(response.statusCode, equals(302));
         expect(response.headers['location'], equals('$finishUrl'));
 
@@ -502,11 +514,12 @@ main() {
         });
 
         test('success', () async {
-          var mock = new RepositoryMock(supportsUploaders: true,
-              addUploaderFun: expectAsync((package, user) {
-            expect(package, equals('pkg'));
-            expect(user, equals('hans'));
-          }));
+          var mock = new RepositoryMock(
+              supportsUploaders: true,
+              addUploaderFun: expectAsync2((package, user) {
+                expect(package, equals('pkg'));
+                expect(user, equals('hans'));
+              }));
 
           var server = new ShelfPubServer(mock);
           var request = new shelf.Request('POST', url, body: formEncodedBody);
@@ -516,10 +529,11 @@ main() {
         });
 
         test('already exists', () async {
-          var mock = new RepositoryMock(supportsUploaders: true,
+          var mock = new RepositoryMock(
+              supportsUploaders: true,
               addUploaderFun: (package, user) {
-            throw new UploaderAlreadyExistsException();
-          });
+                throw new UploaderAlreadyExistsException();
+              });
 
           var server = new ShelfPubServer(mock);
           var request = new shelf.Request('POST', url, body: formEncodedBody);
@@ -529,10 +543,11 @@ main() {
         });
 
         test('unauthorized', () async {
-          var mock = new RepositoryMock(supportsUploaders: true,
+          var mock = new RepositoryMock(
+              supportsUploaders: true,
               addUploaderFun: (package, user) {
-            throw new UnauthorizedAccessException('');
-          });
+                throw new UnauthorizedAccessException('');
+              });
 
           var server = new ShelfPubServer(mock);
           var request = new shelf.Request('POST', url, body: formEncodedBody);
@@ -555,11 +570,12 @@ main() {
         });
 
         test('success', () async {
-          var mock = new RepositoryMock(supportsUploaders: true,
-              removeUploaderFun: expectAsync((package, user) {
-            expect(package, equals('pkg'));
-            expect(user, equals('hans'));
-          }));
+          var mock = new RepositoryMock(
+              supportsUploaders: true,
+              removeUploaderFun: expectAsync2((package, user) {
+                expect(package, equals('pkg'));
+                expect(user, equals('hans'));
+              }));
 
           var server = new ShelfPubServer(mock);
           var request = new shelf.Request('DELETE', url);
@@ -569,10 +585,11 @@ main() {
         });
 
         test('cannot remove last uploader', () async {
-          var mock = new RepositoryMock(supportsUploaders: true,
+          var mock = new RepositoryMock(
+              supportsUploaders: true,
               removeUploaderFun: (package, user) {
-            throw new LastUploaderRemoveException();
-          });
+                throw new LastUploaderRemoveException();
+              });
 
           var server = new ShelfPubServer(mock);
           var request = new shelf.Request('DELETE', url);
@@ -582,10 +599,11 @@ main() {
         });
 
         test('unauthorized', () async {
-          var mock = new RepositoryMock(supportsUploaders: true,
+          var mock = new RepositoryMock(
+              supportsUploaders: true,
               removeUploaderFun: (package, user) {
-            throw new UnauthorizedAccessException('');
-          });
+                throw new UnauthorizedAccessException('');
+              });
 
           var server = new ShelfPubServer(mock);
           var request = new shelf.Request('DELETE', url);

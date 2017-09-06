@@ -44,11 +44,14 @@ class HttpProxyRepository extends PackageRepository {
 
     var controller = new StreamController();
 
-    fetch().then((List<PackageVersion> packageVersions) {
-      for (var packageVersion in packageVersions) {
-        controller.add(packageVersion);
-      }
-    }).catchError(controller.addError).whenComplete(controller.close);
+    fetch()
+        .then((List<PackageVersion> packageVersions) {
+          for (var packageVersion in packageVersions) {
+            controller.add(packageVersion);
+          }
+        })
+        .catchError(controller.addError)
+        .whenComplete(controller.close);
 
     return controller.stream;
   }
