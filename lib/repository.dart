@@ -99,8 +99,8 @@ class GenericProcessingException implements Exception {
 
   GenericProcessingException(this.message);
 
-  factory GenericProcessingException.validationError(String message)
-      => new GenericProcessingException('ValidationError: $message');
+  factory GenericProcessingException.validationError(String message) =>
+      new GenericProcessingException('ValidationError: $message');
 
   String toString() => message;
 }
