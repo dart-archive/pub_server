@@ -436,6 +436,8 @@ class ShelfPubServer {
             'Cannot add an already-existent uploader to package.');
       } on UnauthorizedAccessException {
         return _unauthorizedRequest();
+      } on GenericProcessingException catch (e) {
+        return _badRequest(e.message);
       }
     }
     return _badRequest('Invalid request');
@@ -450,6 +452,8 @@ class ShelfPubServer {
       return _badRequest('Cannot remove last uploader of a package.');
     } on UnauthorizedAccessException {
       return _unauthorizedRequest();
+    } on GenericProcessingException catch (e) {
+      return _badRequest(e.message);
     }
   }
 

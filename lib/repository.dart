@@ -91,6 +91,20 @@ class UploaderAlreadyExistsException implements Exception {
       'uploader.';
 }
 
+/// Generic exception during processing of the clients request.
+///
+/// This may be an issue during validation of `pubspec.yaml`.
+class GenericProcessingException implements Exception {
+  final String message;
+
+  GenericProcessingException(this.message);
+
+  factory GenericProcessingException.validationError(String message)
+      => new GenericProcessingException('ValidationError: $message');
+
+  String toString() => message;
+}
+
 /// Represents a pub repository.
 abstract class PackageRepository {
   /// Returns the known versions of [package].

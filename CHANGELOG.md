@@ -1,3 +1,8 @@
+## 0.1.2
+
+* Add support for generic exceptions raised e.g. due to `pubspec.yaml`
+  validation failure.
+
 ## 0.1.1+4
 
 * Support the latest version of `pkg/shelf`.
