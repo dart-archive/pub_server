@@ -403,8 +403,8 @@ class ShelfPubServer {
 
   shelf.Response _finishUploadSimple(Uri uri) {
     var error = uri.queryParameters['error'];
-    _logger.info('Finish simple upload (error: $error).');
     if (error != null) {
+      _logger.info('Finish simple upload (error: $error).');
       return _badRequest(error);
     }
     return _jsonResponse({
