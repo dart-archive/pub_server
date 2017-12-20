@@ -355,52 +355,50 @@ class ShelfPubServer {
       Uri uri, String contentType, Stream<List<int>> stream) async {
     _logger.info('Perform simple upload.');
 
-    var mediaType = new MediaType.parse(contentType);
+    var boundary = _getBoundary(contentType);
 
-    if (mediaType.type == 'multipart' && mediaType.subtype == 'form-data') {
-      var boundary = mediaType.parameters['boundary'];
-
-      // We have to listen to all multiparts: Just doing `parts.first` will
-      // result in the cancelation of the subscription which causes
-      // eventually a destruction of the socket, this is an odd side-effect.
-      // What we would like to have is something like this:
-      //     parts.expect(1).then((part) { upload(part); })
-      MimeMultipart thePart;
-      StreamSubscription subscription;
-
-      var parts = stream.transform(new MimeMultipartTransformer(boundary));
-      subscription = parts.listen((MimeMultipart part) {
-        // If we get more than one part, we'll ignore the rest of the input.
-        if (thePart != null) {
-          subscription.cancel();
-          return;
-        }
-
-        thePart = part;
-      });
-
-      await subscription.asFuture();
-
-      try {
-        // TODO: Ensure that `part.headers['content-disposition']` is
-        // `form-data; name="file"; filename="package.tar.gz`
-        var version = await repository.upload(thePart);
-        if (cache != null) {
-          _logger
-              .info('Invalidating cache for package ${version.packageName}.');
-          await cache.invalidatePackageData(version.packageName);
-        }
-        _logger.info('Redirecting to found url.');
-        return new shelf.Response.found(_finishUploadSimpleUrl(uri));
-      } catch (error, stack) {
-        _logger.warning('Error occured', error, stack);
-        // TODO: Do error checking and return error codes?
-        return new shelf.Response.found(
-            _finishUploadSimpleUrl(uri, error: error.toString()));
-      }
+    if (boundary == null) {
+      return _badRequest(
+          'Upload must contain a multipart/form-data content type.');
     }
-    return _badRequest(
-        'Upload must contain a multipart/form-data content type.');
+
+    // We have to listen to all multiparts: Just doing `parts.first` will
+    // result in the cancellation of the subscription which causes
+    // eventually a destruction of the socket, this is an odd side-effect.
+    // What we would like to have is something like this:
+    //     parts.expect(1).then((part) { upload(part); })
+    MimeMultipart thePart;
+    StreamSubscription subscription;
+
+    var parts = stream.transform(new MimeMultipartTransformer(boundary));
+    subscription = parts.listen((MimeMultipart part) {
+      // If we get more than one part, we'll ignore the rest of the input.
+      if (thePart != null) {
+        subscription.cancel();
+        return;
+      }
+
+      thePart = part;
+    });
+
+    await subscription.asFuture();
+
+    try {
+      // TODO: Ensure that `part.headers['content-disposition']` is
+      // `form-data; name="file"; filename="package.tar.gz`
+      var version = await repository.upload(thePart);
+      if (cache != null) {
+        _logger.info('Invalidating cache for package ${version.packageName}.');
+        await cache.invalidatePackageData(version.packageName);
+      }
+      _logger.info('Redirecting to found url.');
+      return new shelf.Response.found(_finishUploadSimpleUrl(uri));
+    } catch (error, stack) {
+      _logger.warning('Error occured', error, stack);
+      // TODO: Do error checking and return error codes?
+      return new shelf.Response.found(
+          _finishUploadSimpleUrl(uri, error: error.toString()));
+    }
   }
 
   shelf.Response _finishUploadSimple(Uri uri) {
@@ -524,4 +522,13 @@ abstract class PackageCache {
   Future<List<int>> getPackageData(String package);
 
   Future invalidatePackageData(String package);
+}
+
+String _getBoundary(String contentType) {
+  var mediaType = new MediaType.parse(contentType);
+
+  if (mediaType.type == 'multipart' && mediaType.subtype == 'form-data') {
+    return mediaType.parameters['boundary'];
+  }
+  return null;
 }
