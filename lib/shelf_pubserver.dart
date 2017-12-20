@@ -7,6 +7,7 @@ library pub_server.shelf_pubserver;
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:http_parser/http_parser.dart';
 import 'package:logging/logging.dart';
 import 'package:mime/mime.dart';
 import 'package:pub_semver/pub_semver.dart' as semver;
@@ -141,14 +142,17 @@ class ShelfPubServer {
   static final RegExp _downloadRegexp =
       new RegExp(r'^/packages/([^/]+)/versions/([^/]+)\.tar\.gz$');
 
-  static final RegExp _boundaryRegExp = new RegExp(r'^.*boundary="([^"]+)"$');
-
   final PackageRepository repository;
   final PackageCache cache;
 
   ShelfPubServer(this.repository, {this.cache});
 
   Future<shelf.Response> requestHandler(shelf.Request request) async {
+    print("REQUEST URL: ${request.url}");
+    return _requestHandler(request);
+  }
+
+  Future<shelf.Response> _requestHandler(shelf.Request request) async {
     String path = request.requestedUri.path;
     if (request.method == 'GET') {
       var downloadMatch = _downloadRegexp.matchAsPrefix(path);
@@ -363,49 +367,49 @@ class ShelfPubServer {
   Future<shelf.Response> _uploadSimple(
       Uri uri, String contentType, Stream<List<int>> stream) {
     _logger.info('Perform simple upload.');
-    if (contentType.startsWith('multipart/form-data')) {
-      var match = _boundaryRegExp.matchAsPrefix(contentType);
-      if (match != null) {
-        var boundary = match.group(1);
 
-        // We have to listen to all multiparts: Just doing `parts.first` will
-        // result in the cancelation of the subscription which causes
-        // eventually a destruction of the socket, this is an odd side-effect.
-        // What we would like to have is something like this:
-        //     parts.expect(1).then((part) { upload(part); })
-        bool firstPartArrived = false;
-        var completer = new Completer<shelf.Response>();
-        StreamSubscription subscription;
+    var mediaType = new MediaType.parse(contentType);
 
-        var parts = stream.transform(new MimeMultipartTransformer(boundary));
-        subscription = parts.listen((MimeMultipart part) {
-          // If we get more than one part, we'll ignore the rest of the input.
-          if (firstPartArrived) {
-            subscription.cancel();
-            return;
+    if (mediaType.type == 'multipart' && mediaType.subtype == 'form-data') {
+      var boundary = mediaType.parameters['boundary'];
+
+      // We have to listen to all multiparts: Just doing `parts.first` will
+      // result in the cancelation of the subscription which causes
+      // eventually a destruction of the socket, this is an odd side-effect.
+      // What we would like to have is something like this:
+      //     parts.expect(1).then((part) { upload(part); })
+      bool firstPartArrived = false;
+      var completer = new Completer<shelf.Response>();
+      StreamSubscription subscription;
+
+      var parts = stream.transform(new MimeMultipartTransformer(boundary));
+      subscription = parts.listen((MimeMultipart part) {
+        // If we get more than one part, we'll ignore the rest of the input.
+        if (firstPartArrived) {
+          subscription.cancel();
+          return;
+        }
+        firstPartArrived = true;
+
+        // TODO: Ensure that `part.headers['content-disposition']` is
+        // `form-data; name="file"; filename="package.tar.gz`
+        repository.upload(part).then((PackageVersion version) async {
+          if (cache != null) {
+            _logger
+                .info('Invalidating cache for package ${version.packageName}.');
+            await cache.invalidatePackageData(version.packageName);
           }
-          firstPartArrived = true;
+          _logger.info('Redirecting to found url.');
+          return new shelf.Response.found(_finishUploadSimpleUrl(uri));
+        }).catchError((String error, stack) {
+          _logger.warning('Error occured: $error\n$stack.');
+          // TODO: Do error checking and return error codes?
+          return new shelf.Response.found(
+              _finishUploadSimpleUrl(uri, error: error));
+        }).then(completer.complete);
+      });
 
-          // TODO: Ensure that `part.headers['content-disposition']` is
-          // `form-data; name="file"; filename="package.tar.gz`
-          repository.upload(part).then((PackageVersion version) async {
-            if (cache != null) {
-              _logger.info(
-                  'Invalidating cache for package ${version.packageName}.');
-              await cache.invalidatePackageData(version.packageName);
-            }
-            _logger.info('Redirecting to found url.');
-            return new shelf.Response.found(_finishUploadSimpleUrl(uri));
-          }).catchError((String error, stack) {
-            _logger.warning('Error occured: $error\n$stack.');
-            // TODO: Do error checking and return error codes?
-            return new shelf.Response.found(
-                _finishUploadSimpleUrl(uri, error: error));
-          }).then(completer.complete);
-        });
-
-        return completer.future;
-      }
+      return completer.future;
     }
     return _badRequest(
         'Upload must contain a multipart/form-data content type.');

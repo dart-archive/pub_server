@@ -3,6 +3,8 @@
 * `PackageRepository.download` now has more specific return type:
   `Future<Stream<List<int>>>`.
 
+* Fix incorrect boundary parsing during upload.
+
 ## 0.1.2
 
 * Add support for generic exceptions raised e.g. due to `pubspec.yaml`
