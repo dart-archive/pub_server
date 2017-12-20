@@ -76,7 +76,7 @@ class FileRepository extends PackageRepository {
     }
     if (pubspecArchiveFile != null) {
       // TODO: Error handling.
-      var pubspec = loadYaml(UTF8.decode(pubspecArchiveFile.content));
+      var pubspec = loadYaml(UTF8.decode(_getBytes(pubspecArchiveFile)));
 
       var package = pubspec['name'] as String;
       var version = pubspec['version'] as String;
@@ -89,7 +89,7 @@ class FileRepository extends PackageRepository {
       if (!packageVersionDir.existsSync()) {
         packageVersionDir.createSync(recursive: true);
       }
-      pubspecFile.writeAsBytesSync(pubspecArchiveFile.content);
+      pubspecFile.writeAsBytesSync(_getBytes(pubspecArchiveFile));
       tarballFile.writeAsBytesSync(tarballBytes);
 
       _logger.info('Uploaded new $package/$version');
@@ -121,3 +121,7 @@ class FileRepository extends PackageRepository {
   String packageTarballPath(String package, String version) =>
       path.join(baseDir, package, version, 'package.tar.gz');
 }
+
+// Since pkg/archive v1.0.31, content is `dynamic` although in our use case
+// it's always `List<int>`
+List<int> _getBytes(ArchiveFile file) => file.content as List<int>;
