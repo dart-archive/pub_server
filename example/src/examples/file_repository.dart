@@ -104,15 +104,14 @@ class FileRepository extends PackageRepository {
   bool get supportsDownloadUrl => false;
 
   @override
-  Future<Stream<List<int>>> download(String package, String version) {
+  Future<Stream<List<int>>> download(String package, String version) async {
     var pubspecFile = new File(pubspecFilePath(package, version));
     var tarballFile = new File(packageTarballPath(package, version));
 
     if (pubspecFile.existsSync() && tarballFile.existsSync()) {
-      return new Future.value(tarballFile.openRead());
+      return tarballFile.openRead();
     } else {
-      return new Future.error(
-          'package cannot be downloaded, because it does not exist');
+      throw 'package cannot be downloaded, because it does not exist';
     }
   }
 
