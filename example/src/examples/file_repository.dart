@@ -91,9 +91,13 @@ class FileRepository extends PackageRepository {
       packageVersionDir.createSync(recursive: true);
     }
 
+    var pubspecFile = new File(pubspecFilePath(package, version));
+    if (pubspecFile.existsSync()) {
+      throw new StateError('`$package` already exists at version `$version`.');
+    }
+
     var pubspecContent = UTF8.decode(_getBytes(pubspecArchiveFile));
-    new File(pubspecFilePath(package, version))
-        .writeAsStringSync(pubspecContent);
+    pubspecFile.writeAsStringSync(pubspecContent);
     new File(packageTarballPath(package, version))
         .writeAsBytesSync(tarballBytes);
 
