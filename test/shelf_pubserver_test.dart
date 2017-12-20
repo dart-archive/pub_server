@@ -79,9 +79,12 @@ class RepositoryMock implements PackageRepository {
     throw 'upload';
   }
 
-  Stream<PackageVersion> versions(String package) {
-    if (versionsFun != null) return versionsFun(package);
-    return new Stream.fromFuture(new Future.error('versions'));
+  Stream<PackageVersion> versions(String package) async* {
+    if (versionsFun == null) {
+      throw 'versions';
+    }
+
+    yield* versionsFun(package);
   }
 
   Future addUploader(String package, String userEmail) {
@@ -351,10 +354,9 @@ main() {
           var mock = new RepositoryMock(
               supportsUpload: true,
               supportsAsyncUpload: true,
-              startAsyncUploadFun: (Uri redirectUri) {
+              startAsyncUploadFun: (Uri redirectUri) async {
                 expect(redirectUri, equals(finishUrl));
-                return new Future.value(
-                    new AsyncUploadInfo(expectedUrl, {'a': '$foobarUrl'}));
+                return new AsyncUploadInfo(expectedUrl, {'a': '$foobarUrl'});
               },
               finishAsyncUploadFun: (Uri uri) {
                 expect('$uri', equals('$finishUrl'));
@@ -464,8 +466,8 @@ main() {
             getUri('/api/packages/versions/newUploadFinish?error=abc');
         var mock = new RepositoryMock(
             supportsUpload: true,
-            uploadFun: (Stream<List<int>> stream) {
-              return new Future.error('abc');
+            uploadFun: (Stream<List<int>> stream) async {
+              throw 'abc';
             });
         var server = new ShelfPubServer(mock);
 

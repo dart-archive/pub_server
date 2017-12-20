@@ -148,7 +148,7 @@ class ShelfPubServer {
 
   ShelfPubServer(this.repository, {this.cache});
 
-  Future<shelf.Response> requestHandler(shelf.Request request) {
+  Future<shelf.Response> requestHandler(shelf.Request request) async {
     String path = request.requestedUri.path;
     if (request.method == 'GET') {
       var downloadMatch = _downloadRegexp.matchAsPrefix(path);
@@ -175,7 +175,7 @@ class ShelfPubServer {
 
       if (path == '/api/packages/versions/new') {
         if (!repository.supportsUpload) {
-          return new Future.value(new shelf.Response.notFound(null));
+          return new shelf.Response.notFound(null);
         }
 
         if (repository.supportsAsyncUpload) {
@@ -187,7 +187,7 @@ class ShelfPubServer {
 
       if (path == '/api/packages/versions/newUploadFinish') {
         if (!repository.supportsUpload) {
-          return new Future.value(new shelf.Response.notFound(null));
+          return new shelf.Response.notFound(null);
         }
 
         if (repository.supportsAsyncUpload) {
@@ -199,14 +199,14 @@ class ShelfPubServer {
     } else if (request.method == 'POST') {
       if (path == '/api/packages/versions/newUpload') {
         if (!repository.supportsUpload) {
-          return new Future.value(new shelf.Response.notFound(null));
+          return new shelf.Response.notFound(null);
         }
 
         return _uploadSimple(request.requestedUri,
             request.headers['content-type'], request.read());
       } else {
         if (!repository.supportsUploaders) {
-          return new Future.value(new shelf.Response.notFound(null));
+          return new shelf.Response.notFound(null);
         }
 
         var addUploaderMatch = _addUploaderRegexp.matchAsPrefix(path);
@@ -219,7 +219,7 @@ class ShelfPubServer {
       }
     } else if (request.method == 'DELETE') {
       if (!repository.supportsUploaders) {
-        return new Future.value(new shelf.Response.notFound(null));
+        return new shelf.Response.notFound(null);
       }
 
       var removeUploaderMatch = _removeUploaderRegexp.matchAsPrefix(path);
@@ -229,7 +229,7 @@ class ShelfPubServer {
         return removeUploader(package, user);
       }
     }
-    return new Future.value(new shelf.Response.notFound(null));
+    return new shelf.Response.notFound(null);
   }
 
   // Metadata handlers.
@@ -464,28 +464,28 @@ class ShelfPubServer {
         'Version string "$version" is not a valid semantic version.');
   }
 
-  Future<shelf.Response> _successfullRequest(String message) {
-    return new Future.value(new shelf.Response(200,
+  Future<shelf.Response> _successfullRequest(String message) async {
+    return new shelf.Response(200,
         body: JSON.encode({
           'success': {'message': message}
         }),
-        headers: {'content-type': 'application/json'}));
+        headers: {'content-type': 'application/json'});
   }
 
-  Future<shelf.Response> _unauthorizedRequest() {
-    return new Future.value(new shelf.Response(403,
+  Future<shelf.Response> _unauthorizedRequest() async {
+    return new shelf.Response(403,
         body: JSON.encode({
           'error': {'message': 'Unauthorized request.'}
         }),
-        headers: {'content-type': 'application/json'}));
+        headers: {'content-type': 'application/json'});
   }
 
-  Future<shelf.Response> _badRequest(String message) {
-    return new Future.value(new shelf.Response(400,
+  Future<shelf.Response> _badRequest(String message) async {
+    return new shelf.Response(400,
         body: JSON.encode({
           'error': {'message': message}
         }),
-        headers: {'content-type': 'application/json'}));
+        headers: {'content-type': 'application/json'});
   }
 
   Future<shelf.Response> _binaryJsonResponse(List<int> d, {int status: 200}) {
