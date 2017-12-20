@@ -148,11 +148,6 @@ class ShelfPubServer {
   ShelfPubServer(this.repository, {this.cache});
 
   Future<shelf.Response> requestHandler(shelf.Request request) async {
-    print("REQUEST URL: ${request.url}");
-    return _requestHandler(request);
-  }
-
-  Future<shelf.Response> _requestHandler(shelf.Request request) async {
     String path = request.requestedUri.path;
     if (request.method == 'GET') {
       var downloadMatch = _downloadRegexp.matchAsPrefix(path);
