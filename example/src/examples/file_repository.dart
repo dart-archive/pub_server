@@ -74,30 +74,32 @@ class FileRepository extends PackageRepository {
         break;
       }
     }
-    if (pubspecArchiveFile != null) {
-      // TODO: Error handling.
-      var pubspec = loadYaml(UTF8.decode(_getBytes(pubspecArchiveFile)));
 
-      var package = pubspec['name'] as String;
-      var version = pubspec['version'] as String;
-
-      var packageVersionDir =
-          new Directory(path.join(baseDir, package, version));
-      var pubspecFile = new File(pubspecFilePath(package, version));
-      var tarballFile = new File(packageTarballPath(package, version));
-
-      if (!packageVersionDir.existsSync()) {
-        packageVersionDir.createSync(recursive: true);
-      }
-      pubspecFile.writeAsBytesSync(_getBytes(pubspecArchiveFile));
-      tarballFile.writeAsBytesSync(tarballBytes);
-
-      _logger.info('Uploaded new $package/$version');
-    } else {
-      _logger.warning('Did not find any pubspec.yaml file in upload. '
-          'Aborting.');
-      throw 'No pubspec file.';
+    if (pubspecArchiveFile == null) {
+      throw 'Did not find any pubspec.yaml file in upload. Aborting.';
     }
+
+    // TODO: Error handling.
+    var pubspec = loadYaml(UTF8.decode(_getBytes(pubspecArchiveFile)));
+
+    var package = pubspec['name'] as String;
+    var version = pubspec['version'] as String;
+
+    var packageVersionDir = new Directory(path.join(baseDir, package, version));
+
+    if (!packageVersionDir.existsSync()) {
+      packageVersionDir.createSync(recursive: true);
+    }
+
+    var pubspecContent = UTF8.decode(_getBytes(pubspecArchiveFile));
+    new File(pubspecFilePath(package, version))
+        .writeAsStringSync(pubspecContent);
+    new File(packageTarballPath(package, version))
+        .writeAsBytesSync(tarballBytes);
+
+    _logger.info('Uploaded new $package/$version');
+
+    return new PackageVersion(package, version, pubspecContent);
   }
 
   @override
