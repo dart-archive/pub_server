@@ -11,9 +11,9 @@ Example pub repository server
 -----------------------------------------
 
 An *experimental* pub server based on a file system can be found in
-`bin/server.dart`. It uses a filesystem-based `PackageRepository` for storing
-packages and has a read-only fallback to the real `pub.dartlang.org` site,
-if a package is not available locally. This allows one to use all
+`example/example.dart`. It uses a filesystem-based `PackageRepository` for
+storing packages and has a read-only fallback to the real `pub.dartlang.org`
+site, if a package is not available locally. This allows one to use all 
 `pub.dartlang.org` packages and have additional ones, on top of the publicly
 available packages, available only locally.
 
@@ -23,7 +23,7 @@ It can be run as follows
 ~ $ cd pub_server
 ~/pub_server $ pub get
 ...
-~/pub_server $ dart example/server.dart -d /tmp/package-db
+~/pub_server $ dart example/example.dart -d /tmp/package-db
 Listening on http://localhost:8080
 
 To make the pub client use this repository configure your shell via:
