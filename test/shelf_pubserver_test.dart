@@ -2,6 +2,7 @@
 // for details. All rights reserved. Use of this source code is governed by a
 // BSD-style license that can be found in the LICENSE file.
 
+// ignore_for_file: annotate_overrides
 library pub_server.shelf_pubserver_test;
 
 import 'dart:async';
@@ -13,15 +14,15 @@ import 'package:pub_server/shelf_pubserver.dart';
 import 'package:test/test.dart';
 
 class RepositoryMock implements PackageRepository {
-  final Function downloadFun;
-  final Function downloadUrlFun;
-  final Function finishAsyncUploadFun;
-  final Function lookupVersionFun;
-  final Function startAsyncUploadFun;
-  final Function uploadFun;
-  final Function versionsFun;
-  final Function addUploaderFun;
-  final Function removeUploaderFun;
+  final ZoneBinaryCallback<Stream<List<int>>, String, String> downloadFun;
+  final ZoneBinaryCallback<Uri, String, String> downloadUrlFun;
+  final ZoneUnaryCallback<PackageVersion, Uri> finishAsyncUploadFun;
+  final ZoneBinaryCallback<PackageVersion, String, String> lookupVersionFun;
+  final ZoneUnaryCallback<Future<AsyncUploadInfo>, Uri> startAsyncUploadFun;
+  final ZoneUnaryCallback<Future<PackageVersion>, Stream<List<int>>> uploadFun;
+  final ZoneUnaryCallback<Stream<PackageVersion>, String> versionsFun;
+  final ZoneBinaryCallback<Future, String, String> addUploaderFun;
+  final ZoneBinaryCallback<Future, String, String> removeUploaderFun;
 
   RepositoryMock(
       {this.downloadFun,
@@ -38,7 +39,7 @@ class RepositoryMock implements PackageRepository {
       this.removeUploaderFun,
       this.supportsUploaders: false});
 
-  Future<Stream> download(String package, String version) async {
+  Future<Stream<List<int>>> download(String package, String version) async {
     if (downloadFun != null) return downloadFun(package, version);
     throw 'download';
   }
@@ -99,7 +100,7 @@ class RepositoryMock implements PackageRepository {
 }
 
 class PackageCacheMock implements PackageCache {
-  final Function getFun;
+  final ZoneUnaryCallback<List<int>, String> getFun;
   final Function setFun;
   final Function invalidateFun;
 
@@ -359,7 +360,7 @@ main() {
                 expect('$uri', equals('$finishUrl'));
                 return new PackageVersion('foobar', '0.1.0', '');
               });
-          var cacheMock;
+          PackageCacheMock cacheMock;
           if (useMemcache) {
             cacheMock = new PackageCacheMock(
                 invalidateFun: expectAsync1((String package) {
@@ -415,7 +416,7 @@ main() {
                   return new PackageVersion('foobar', '0.1.0', '');
                 });
               });
-          var cacheMock;
+          PackageCacheMock cacheMock;
           if (useMemcache) {
             cacheMock = new PackageCacheMock(
                 invalidateFun: expectAsync1((String package) {

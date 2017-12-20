@@ -14,16 +14,16 @@ import 'src/examples/cow_repository.dart';
 import 'src/examples/file_repository.dart';
 import 'src/examples/http_proxy_repository.dart';
 
-final Uri PubDartLangOrg = Uri.parse('https://pub.dartlang.org');
+final Uri pubDartLangOrg = Uri.parse('https://pub.dartlang.org');
 
 main(List<String> args) {
   var parser = argsParser();
   var results = parser.parse(args);
 
-  var directory = results['directory'];
-  var host = results['host'];
-  var port = int.parse(results['port']);
-  var standalone = results['standalone'];
+  var directory = results['directory'] as String;
+  var host = results['host'] as String;
+  var port = int.parse(results['port'] as String);
+  var standalone = results['standalone'] as bool;
 
   if (results.rest.length > 0) {
     print('Got unexpected arguments: "${results.rest.join(' ')}".\n\nUsage:\n');
@@ -39,7 +39,7 @@ runPubServer(String baseDir, String host, int port, bool standalone) {
   var client = new http.Client();
 
   var local = new FileRepository(baseDir);
-  var remote = new HttpProxyRepository(client, PubDartLangOrg);
+  var remote = new HttpProxyRepository(client, pubDartLangOrg);
   var cow = new CopyAndWriteRepository(local, remote, standalone);
 
   var server = new ShelfPubServer(cow);

@@ -38,15 +38,16 @@ class CopyAndWriteRepository extends PackageRepository {
         this._localCache = new _RemoteMetadataCache(local),
         this._remoteCache = new _RemoteMetadataCache(remote);
 
+  @override
   Stream<PackageVersion> versions(String package) {
-    var controller;
+    StreamController<PackageVersion> controller;
     onListen() {
       var waitList = [_localCache.fetchVersionlist(package)];
       if (standalone != true) {
         waitList.add(_remoteCache.fetchVersionlist(package));
       }
       Future.wait(waitList).then((tuple) {
-        var versions = new Set()..addAll(tuple[0]);
+        var versions = new Set<PackageVersion>()..addAll(tuple[0]);
         if (standalone != true) {
           versions.addAll(tuple[1]);
         }
@@ -59,6 +60,7 @@ class CopyAndWriteRepository extends PackageRepository {
     return controller.stream;
   }
 
+  @override
   Future<PackageVersion> lookupVersion(String package, String version) {
     return versions(package)
         .where((pv) => pv.versionString == version)
@@ -69,7 +71,8 @@ class CopyAndWriteRepository extends PackageRepository {
     });
   }
 
-  Future<Stream> download(String package, String version) async {
+  @override
+  Future<Stream<List<int>>> download(String package, String version) async {
     var packageVersion = await local.lookupVersion(package, version);
 
     if (packageVersion != null) {
@@ -90,8 +93,10 @@ class CopyAndWriteRepository extends PackageRepository {
     }
   }
 
+  @override
   bool get supportsUpload => true;
 
+  @override
   Future<PackageVersion> upload(Stream<List<int>> data) {
     _logger.info('Starting upload to local package repository.');
     // TODO: Converting this to an async scope makes the stream not get any data
@@ -105,6 +110,7 @@ class CopyAndWriteRepository extends PackageRepository {
     });
   }
 
+  @override
   bool get supportsAsyncUpload => false;
 }
 
@@ -125,7 +131,7 @@ class _RemoteMetadataCache {
   Future<List<PackageVersion>> fetchVersionlist(String package) {
     return _versionCompleters
         .putIfAbsent(package, () {
-          var c = new Completer();
+          var c = new Completer<Set<PackageVersion>>();
 
           _versions.putIfAbsent(package, () => new Set());
           remote.versions(package).toList().then((versions) {
