@@ -6,6 +6,7 @@ import 'dart:io';
 
 import 'package:args/args.dart';
 import 'package:logging/logging.dart';
+import 'package:shelf/shelf.dart';
 import 'package:shelf/shelf_io.dart' as shelf_io;
 import 'package:http/http.dart' as http;
 import 'package:pub_server/shelf_pubserver.dart';
@@ -49,7 +50,13 @@ runPubServer(String baseDir, String host, int port, bool standalone) {
       '\n'
       '    \$ export PUB_HOSTED_URL=http://$host:$port\n'
       '\n');
-  return shelf_io.serve(server.requestHandler, host, port);
+
+  return shelf_io.serve(
+      const Pipeline()
+          .addMiddleware(logRequests())
+          .addHandler(server.requestHandler),
+      host,
+      port);
 }
 
 ArgParser argsParser() {
