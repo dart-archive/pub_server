@@ -30,9 +30,11 @@ class PackageVersion {
 
   PackageVersion(this.packageName, this.versionString, this.pubspecYaml);
 
+  @override
   int get hashCode =>
       packageName.hashCode ^ versionString.hashCode ^ pubspecYaml.hashCode;
 
+  @override
   bool operator ==(other) {
     return other is PackageVersion &&
         other.packageName == packageName &&
@@ -40,6 +42,7 @@ class PackageVersion {
         other.pubspecYaml == pubspecYaml;
   }
 
+  @override
   String toString() => 'PackageVersion: $packageName/$versionString';
 }
 
@@ -66,6 +69,7 @@ class UnauthorizedAccessException implements Exception {
 
   UnauthorizedAccessException(this.message);
 
+  @override
   String toString() => 'UnauthorizedAccess: $message';
 }
 
@@ -76,6 +80,7 @@ class UnauthorizedAccessException implements Exception {
 class LastUploaderRemoveException implements Exception {
   LastUploaderRemoveException();
 
+  @override
   String toString() => 'LastUploaderRemoved: Cannot remove last uploader of a '
       'package.';
 }
@@ -87,6 +92,7 @@ class LastUploaderRemoveException implements Exception {
 class UploaderAlreadyExistsException implements Exception {
   UploaderAlreadyExistsException();
 
+  @override
   String toString() => 'UploaderAlreadyExists: Cannot add an already existent '
       'uploader.';
 }
@@ -102,6 +108,7 @@ class GenericProcessingException implements Exception {
   factory GenericProcessingException.validationError(String message) =>
       new GenericProcessingException('ValidationError: $message');
 
+  @override
   String toString() => message;
 }
 
@@ -127,7 +134,7 @@ abstract class PackageRepository {
 
   /// Starts a new upload.
   ///
-  /// The given [baseRedirectUrl] instructs the uploading client to make a GET
+  /// The given [redirectUrl] instructs the uploading client to make a GET
   /// request to this location once the upload is complete. It might contain
   /// additional query parameters and must be supplied to `finishAsyncUpload`.
   ///
@@ -141,7 +148,7 @@ abstract class PackageRepository {
       new Future.error(new UnsupportedError('No async upload support.'));
 
   /// Downloads a pub package.
-  Future<Stream> download(String package, String version);
+  Future<Stream<List<int>>> download(String package, String version);
 
   /// Whether this package repository supports download URLs.
   bool get supportsDownloadUrl => false;

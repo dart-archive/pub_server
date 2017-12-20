@@ -340,7 +340,7 @@ class ShelfPubServer {
           'message': 'Successfully uploaded package.',
         },
       });
-    }).catchError((error, stack) {
+    }).catchError((error, StackTrace stack) {
       _logger.warning('An error occured while finishing upload', error, stack);
       return _jsonResponse({
         'error': {
@@ -374,8 +374,8 @@ class ShelfPubServer {
         // What we would like to have is something like this:
         //     parts.expect(1).then((part) { upload(part); })
         bool firstPartArrived = false;
-        var completer = new Completer();
-        var subscription;
+        var completer = new Completer<shelf.Response>();
+        StreamSubscription subscription;
 
         var parts = stream.transform(new MimeMultipartTransformer(boundary));
         subscription = parts.listen((MimeMultipart part) {
@@ -396,7 +396,7 @@ class ShelfPubServer {
             }
             _logger.info('Redirecting to found url.');
             return new shelf.Response.found(_finishUploadSimpleUrl(uri));
-          }).catchError((error, stack) {
+          }).catchError((String error, stack) {
             _logger.warning('Error occured: $error\n$stack.');
             // TODO: Do error checking and return error codes?
             return new shelf.Response.found(

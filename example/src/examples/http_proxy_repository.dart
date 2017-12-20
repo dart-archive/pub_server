@@ -23,42 +23,28 @@ class HttpProxyRepository extends PackageRepository {
 
   HttpProxyRepository(this.client, this.baseUrl);
 
-  Stream<PackageVersion> versions(String package) {
-    Future<List<PackageVersion>> fetch() async {
-      Uri versionUrl =
-          baseUrl.resolve('/api/packages/${Uri.encodeComponent(package)}');
+  @override
+  Stream<PackageVersion> versions(String package) async* {
+    Uri versionUrl =
+        baseUrl.resolve('/api/packages/${Uri.encodeComponent(package)}');
 
-      http.Response response = await client.get(versionUrl);
-      var json = JSON.decode(response.body);
-      var versions = json['versions'];
-      if (versions != null) {
-        return versions.map((Map item) {
-          var pubspec = item['pubspec'];
-          var pubspecString = JSON.encode(pubspec);
-          return new PackageVersion(
-              pubspec['name'], pubspec['version'], pubspecString);
-        }).toList();
+    http.Response response = await client.get(versionUrl);
+    var json = JSON.decode(response.body);
+    var versions = json['versions'] as List<Map>;
+    if (versions != null) {
+      for (var item in versions) {
+        var pubspec = item['pubspec'];
+        var pubspecString = JSON.encode(pubspec);
+        yield new PackageVersion(pubspec['name'] as String,
+            pubspec['version'] as String, pubspecString);
       }
-      return const [];
     }
-
-    var controller = new StreamController();
-
-    fetch()
-        .then((List<PackageVersion> packageVersions) {
-          for (var packageVersion in packageVersions) {
-            controller.add(packageVersion);
-          }
-        })
-        .catchError(controller.addError)
-        .whenComplete(controller.close);
-
-    return controller.stream;
   }
 
   // TODO: Could be optimized, since we don't need to list all versions and can
   // just talk to the HTTP endpoint which gives us a specific package/version
   // combination.
+  @override
   Future<PackageVersion> lookupVersion(String package, String version) {
     return versions(package)
         .where((v) => v.packageName == package && v.versionString == version)
@@ -69,19 +55,24 @@ class HttpProxyRepository extends PackageRepository {
     });
   }
 
+  @override
   bool get supportsUpload => false;
 
+  @override
   bool get supportsAsyncUpload => false;
 
+  @override
   bool get supportsDownloadUrl => true;
 
+  @override
   Future<Uri> downloadUrl(String package, String version) async {
     package = Uri.encodeComponent(package);
     version = Uri.encodeComponent(version);
     return baseUrl.resolve('/packages/$package/versions/$version.tar.gz');
   }
 
-  Future<Stream> download(String package, String version) async {
+  @override
+  Future<Stream<List<int>>> download(String package, String version) async {
     _logger.info('Downloading package $package/$version.');
 
     var url = await downloadUrl(package, version);

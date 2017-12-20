@@ -22,6 +22,7 @@ class FileRepository extends PackageRepository {
 
   FileRepository(this.baseDir);
 
+  @override
   Stream<PackageVersion> versions(String package) {
     var directory = new Directory(path.join(baseDir, package));
     if (directory.existsSync()) {
@@ -44,6 +45,7 @@ class FileRepository extends PackageRepository {
 
   // TODO: Could be optimized by searching for the exact package/version
   // combination instead of enumerating all.
+  @override
   Future<PackageVersion> lookupVersion(String package, String version) {
     return versions(package)
         .where((pv) => pv.versionString == version)
@@ -54,51 +56,55 @@ class FileRepository extends PackageRepository {
     });
   }
 
+  @override
   bool get supportsUpload => true;
 
-  Future<PackageVersion> upload(Stream<List<int>> data) {
+  @override
+  Future<PackageVersion> upload(Stream<List<int>> data) async {
     _logger.info('Start uploading package.');
-    return data.fold(new BytesBuilder(), (b, d) => b..add(d)).then((bb) {
-      var tarballBytes = bb.takeBytes();
-      var tarBytes = new GZipDecoder().decodeBytes(tarballBytes);
-      var archive = new TarDecoder().decodeBytes(tarBytes);
-      var pubspecArchiveFile;
-      for (var file in archive.files) {
-        if (file.name == 'pubspec.yaml') {
-          pubspecArchiveFile = file;
-          break;
-        }
+    var bb = await data.fold(new BytesBuilder(),
+        (BytesBuilder byteBuilder, d) => byteBuilder..add(d));
+    var tarballBytes = bb.takeBytes();
+    var tarBytes = new GZipDecoder().decodeBytes(tarballBytes);
+    var archive = new TarDecoder().decodeBytes(tarBytes);
+    ArchiveFile pubspecArchiveFile;
+    for (var file in archive.files) {
+      if (file.name == 'pubspec.yaml') {
+        pubspecArchiveFile = file;
+        break;
       }
-      if (pubspecArchiveFile != null) {
-        // TODO: Error handling.
-        var pubspec = loadYaml(UTF8.decode(pubspecArchiveFile.content));
+    }
+    if (pubspecArchiveFile != null) {
+      // TODO: Error handling.
+      var pubspec = loadYaml(UTF8.decode(pubspecArchiveFile.content));
 
-        var package = pubspec['name'];
-        var version = pubspec['version'];
+      var package = pubspec['name'] as String;
+      var version = pubspec['version'] as String;
 
-        var packageVersionDir =
-            new Directory(path.join(baseDir, package, version));
-        var pubspecFile = new File(pubspecFilePath(package, version));
-        var tarballFile = new File(packageTarballPath(package, version));
+      var packageVersionDir =
+          new Directory(path.join(baseDir, package, version));
+      var pubspecFile = new File(pubspecFilePath(package, version));
+      var tarballFile = new File(packageTarballPath(package, version));
 
-        if (!packageVersionDir.existsSync()) {
-          packageVersionDir.createSync(recursive: true);
-        }
-        pubspecFile.writeAsBytesSync(pubspecArchiveFile.content);
-        tarballFile.writeAsBytesSync(tarballBytes);
-
-        _logger.info('Uploaded new $package/$version');
-      } else {
-        _logger.warning('Did not find any pubspec.yaml file in upload. '
-            'Aborting.');
-        throw 'No pubspec file.';
+      if (!packageVersionDir.existsSync()) {
+        packageVersionDir.createSync(recursive: true);
       }
-    });
+      pubspecFile.writeAsBytesSync(pubspecArchiveFile.content);
+      tarballFile.writeAsBytesSync(tarballBytes);
+
+      _logger.info('Uploaded new $package/$version');
+    } else {
+      _logger.warning('Did not find any pubspec.yaml file in upload. '
+          'Aborting.');
+      throw 'No pubspec file.';
+    }
   }
 
+  @override
   bool get supportsDownloadUrl => false;
 
-  Future<Stream> download(String package, String version) {
+  @override
+  Future<Stream<List<int>>> download(String package, String version) {
     var pubspecFile = new File(pubspecFilePath(package, version));
     var tarballFile = new File(packageTarballPath(package, version));
 
