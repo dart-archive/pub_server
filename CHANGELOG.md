@@ -5,6 +5,8 @@
 
 * Fix incorrect boundary parsing during upload.
 
+* Update minimum Dart SDK to `1.23.0`.
+
 ## 0.1.2
 
 * Add support for generic exceptions raised e.g. due to `pubspec.yaml`
