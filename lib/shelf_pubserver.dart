@@ -368,20 +368,16 @@ class ShelfPubServer {
     // What we would like to have is something like this:
     //     parts.expect(1).then((part) { upload(part); })
     MimeMultipart thePart;
-    StreamSubscription subscription;
 
-    var parts = stream.transform(new MimeMultipartTransformer(boundary));
-    subscription = parts.listen((MimeMultipart part) {
+    await for (var part
+        in stream.transform(new MimeMultipartTransformer(boundary))) {
       // If we get more than one part, we'll ignore the rest of the input.
       if (thePart != null) {
-        subscription.cancel();
-        return;
+        continue;
       }
 
       thePart = part;
-    });
-
-    await subscription.asFuture();
+    }
 
     try {
       // TODO: Ensure that `part.headers['content-disposition']` is
