@@ -10,7 +10,7 @@ import 'dart:io';
 
 import 'package:archive/archive.dart';
 import 'package:logging/logging.dart';
-import 'package:path/path.dart' as path;
+import 'package:path/path.dart' as p;
 import 'package:pub_server/repository.dart';
 import 'package:yaml/yaml.dart';
 
@@ -24,13 +24,13 @@ class FileRepository extends PackageRepository {
 
   @override
   Stream<PackageVersion> versions(String package) {
-    var directory = new Directory(path.join(baseDir, package));
+    var directory = new Directory(p.join(baseDir, package));
     if (directory.existsSync()) {
       return directory
           .list(recursive: false)
           .where((fse) => fse is Directory)
           .map((dir) {
-        var version = path.basename(dir.path);
+        var version = p.basename(dir.path);
         var pubspecFile = new File(pubspecFilePath(package, version));
         var tarballFile = new File(packageTarballPath(package, version));
         if (pubspecFile.existsSync() && tarballFile.existsSync()) {
@@ -85,7 +85,7 @@ class FileRepository extends PackageRepository {
     var package = pubspec['name'] as String;
     var version = pubspec['version'] as String;
 
-    var packageVersionDir = new Directory(path.join(baseDir, package, version));
+    var packageVersionDir = new Directory(p.join(baseDir, package, version));
 
     if (!packageVersionDir.existsSync()) {
       packageVersionDir.createSync(recursive: true);
@@ -122,10 +122,10 @@ class FileRepository extends PackageRepository {
   }
 
   String pubspecFilePath(String package, String version) =>
-      path.join(baseDir, package, version, 'pubspec.yaml');
+      p.join(baseDir, package, version, 'pubspec.yaml');
 
   String packageTarballPath(String package, String version) =>
-      path.join(baseDir, package, version, 'package.tar.gz');
+      p.join(baseDir, package, version, 'package.tar.gz');
 }
 
 // Since pkg/archive v1.0.31, content is `dynamic` although in our use case
