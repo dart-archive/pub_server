@@ -97,17 +97,15 @@ class CopyAndWriteRepository extends PackageRepository {
   bool get supportsUpload => true;
 
   @override
-  Future<PackageVersion> upload(Stream<List<int>> data) {
+  Future<PackageVersion> upload(Stream<List<int>> data) async {
     _logger.info('Starting upload to local package repository.');
-    // TODO: Converting this to an async scope makes the stream not get any data
-    // or done event. Seems like there is still an issue in
-    // package:mime - making this an async scope results in this stream getting
-    // no data.
-    return local.upload(data).then((data) {
-      // TODO: It's not really necessary to invalidate all.
-      _logger.info('Upload finished. Invalidating in-memory cache.');
-      _localCache.invalidateAll();
-    });
+    final pkgVersion = await local.upload(data);
+    // TODO: It's not really necessary to invalidate all.
+    _logger.info(
+        'Upload finished - ${pkgVersion.packageName}@${pkgVersion.version}. '
+        'Invalidating in-memory cache.');
+    _localCache.invalidateAll();
+    return pkgVersion;
   }
 
   @override
