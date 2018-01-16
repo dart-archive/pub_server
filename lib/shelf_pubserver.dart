@@ -369,7 +369,7 @@ class ShelfPubServer {
     //     parts.expect(1).then((part) { upload(part); })
     MimeMultipart thePart;
 
-    await for (var part
+    await for (MimeMultipart part
         in stream.transform(new MimeMultipartTransformer(boundary))) {
       // If we get more than one part, we'll ignore the rest of the input.
       if (thePart != null) {
