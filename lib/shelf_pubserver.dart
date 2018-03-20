@@ -248,30 +248,23 @@ class ShelfPubServer {
 
     packageVersions.sort((a, b) => a.version.compareTo(b.version));
 
-    // TODO: Add legacy entries (if necessary), such as version_url.
-    Map packageVersion2Json(PackageVersion version) {
-      return {
-        'archive_url': '${_downloadUrl(
-                  uri, version.packageName, version.versionString)}',
-        'pubspec': loadYaml(version.pubspecYaml),
-        'version': version.versionString,
-      };
-    }
-
-    var latestVersion = packageVersions.last;
+    int latestVersionIndex = packageVersions.length - 1;
     for (int i = packageVersions.length - 1; i >= 0; i--) {
       if (!packageVersions[i].version.isPreRelease) {
-        latestVersion = packageVersions[i];
+        latestVersionIndex = i;
         break;
       }
     }
+    final versionsData = packageVersions
+        .map((pv) => _defaultPackageVersionJson(uri, pv))
+        .toList();
 
     // TODO: The 'latest' is something we should get rid of, since it's
     // duplicated in 'versions'.
     var binaryJson = JSON.encoder.fuse(UTF8.encoder).convert({
       'name': package,
-      'latest': packageVersion2Json(latestVersion),
-      'versions': packageVersions.map(packageVersion2Json).toList(),
+      'latest': versionsData[latestVersionIndex],
+      'versions': versionsData,
     });
     if (cache != null) {
       await cache.setPackageData(package, binaryJson);
@@ -286,13 +279,22 @@ class ShelfPubServer {
       return new shelf.Response.notFound(null);
     }
 
+    return _jsonResponse(_defaultPackageVersionJson(uri, ver));
+  }
+
+  Map<String, dynamic> _defaultPackageVersionJson(
+      Uri uri, PackageVersion version) {
     // TODO: Add legacy entries (if necessary), such as version_url.
-    return _jsonResponse({
+    final map = {
       'archive_url': '${_downloadUrl(
-                    uri, ver.packageName, ver.versionString)}',
-      'pubspec': loadYaml(ver.pubspecYaml),
-      'version': ver.versionString,
-    });
+    uri, version.packageName, version.versionString)}',
+      'pubspec': loadYaml(version.pubspecYaml),
+      'version': version.versionString,
+    };
+    if (version.hasDocumentation != null) {
+      map['hasDocumentation'] = version.hasDocumentation;
+    }
+    return map;
   }
 
   // Download handlers.

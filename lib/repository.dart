@@ -19,6 +19,8 @@ class PackageVersion {
   /// The pubspec yaml file of the package
   final String pubspecYaml;
 
+  final bool hasDocumentation;
+
   Version _cached;
 
   /// The version of the package as a [Version] object.
@@ -28,7 +30,8 @@ class PackageVersion {
     return _cached;
   }
 
-  PackageVersion(this.packageName, this.versionString, this.pubspecYaml);
+  PackageVersion(this.packageName, this.versionString, this.pubspecYaml,
+      {this.hasDocumentation});
 
   @override
   int get hashCode =>
