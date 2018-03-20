@@ -248,22 +248,23 @@ class ShelfPubServer {
 
     packageVersions.sort((a, b) => a.version.compareTo(b.version));
 
-    var latestVersion = packageVersions.last;
+    int latestVersionIndex = packageVersions.length - 1;
     for (int i = packageVersions.length - 1; i >= 0; i--) {
       if (!packageVersions[i].version.isPreRelease) {
-        latestVersion = packageVersions[i];
+        latestVersionIndex = i;
         break;
       }
     }
+    final versionsData = packageVersions
+        .map((pv) => _defaultPackageVersionJson(uri, pv))
+        .toList();
 
     // TODO: The 'latest' is something we should get rid of, since it's
     // duplicated in 'versions'.
     var binaryJson = JSON.encoder.fuse(UTF8.encoder).convert({
       'name': package,
-      'latest': _defaultPackageVersionJson(uri, latestVersion),
-      'versions': packageVersions
-          .map((pv) => _defaultPackageVersionJson(uri, pv))
-          .toList(),
+      'latest': versionsData[latestVersionIndex],
+      'versions': versionsData,
     });
     if (cache != null) {
       await cache.setPackageData(package, binaryJson);
