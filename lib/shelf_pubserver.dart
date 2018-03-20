@@ -285,12 +285,16 @@ class ShelfPubServer {
   Map<String, dynamic> _defaultPackageVersionJson(
       Uri uri, PackageVersion version) {
     // TODO: Add legacy entries (if necessary), such as version_url.
-    return {
+    final map = {
       'archive_url': '${_downloadUrl(
     uri, version.packageName, version.versionString)}',
       'pubspec': loadYaml(version.pubspecYaml),
       'version': version.versionString,
     };
+    if (version.hasDocumentation != null) {
+      map['hasDocumentation'] = version.hasDocumentation;
+    }
+    return map;
   }
 
   // Download handlers.
