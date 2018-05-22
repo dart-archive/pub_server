@@ -5,8 +5,8 @@
 library appengine_pub.http_proxy_repository;
 
 import 'dart:async';
-import 'dart:convert';
 
+import 'package:dart2_constant/convert.dart' as convert;
 import 'package:http/http.dart' as http;
 import 'package:logging/logging.dart';
 import 'package:pub_server/repository.dart';
@@ -29,12 +29,12 @@ class HttpProxyRepository extends PackageRepository {
         baseUrl.resolve('/api/packages/${Uri.encodeComponent(package)}');
 
     http.Response response = await client.get(versionUrl);
-    var json = JSON.decode(response.body);
+    var json = convert.json.decode(response.body);
     var versions = json['versions'] as List<Map>;
     if (versions != null) {
       for (var item in versions) {
         var pubspec = item['pubspec'];
-        var pubspecString = JSON.encode(pubspec);
+        var pubspecString = convert.json.encode(pubspec);
         yield new PackageVersion(pubspec['name'] as String,
             pubspec['version'] as String, pubspecString);
       }

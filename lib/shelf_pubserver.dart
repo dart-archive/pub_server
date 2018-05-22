@@ -5,8 +5,8 @@
 library pub_server.shelf_pubserver;
 
 import 'dart:async';
-import 'dart:convert';
 
+import 'package:dart2_constant/convert.dart' as convert;
 import 'package:http_parser/http_parser.dart';
 import 'package:logging/logging.dart';
 import 'package:mime/mime.dart';
@@ -268,7 +268,7 @@ class ShelfPubServer {
 
     // TODO: The 'latest' is something we should get rid of, since it's
     // duplicated in 'versions'.
-    var binaryJson = JSON.encoder.fuse(UTF8.encoder).convert({
+    var binaryJson = convert.json.encoder.fuse(convert.utf8.encoder).convert({
       'name': package,
       'latest': packageVersion2Json(latestVersion),
       'versions': packageVersions.map(packageVersion2Json).toList(),
@@ -450,20 +450,20 @@ class ShelfPubServer {
 
   Future<shelf.Response> _successfullRequest(String message) async {
     return new shelf.Response(200,
-        body: JSON.encode({
+        body: convert.json.encode({
           'success': {'message': message}
         }),
         headers: {'content-type': 'application/json'});
   }
 
   shelf.Response _unauthorizedRequest() => new shelf.Response(403,
-      body: JSON.encode({
+      body: convert.json.encode({
         'error': {'message': 'Unauthorized request.'}
       }),
       headers: {'content-type': 'application/json'});
 
   shelf.Response _badRequest(String message) => new shelf.Response(400,
-      body: JSON.encode({
+      body: convert.json.encode({
         'error': {'message': message}
       }),
       headers: {'content-type': 'application/json'});
@@ -475,7 +475,7 @@ class ShelfPubServer {
 
   shelf.Response _jsonResponse(Map json, {int status: 200}) =>
       new shelf.Response(status,
-          body: JSON.encode(json),
+          body: convert.json.encode(json),
           headers: {'content-type': 'application/json'});
 
   // Download urls.
