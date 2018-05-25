@@ -6,8 +6,8 @@
 library pub_server.shelf_pubserver_test;
 
 import 'dart:async';
-import 'dart:convert';
 
+import 'package:dart2_constant/convert.dart' as convert;
 import 'package:shelf/shelf.dart' as shelf;
 import 'package:pub_server/repository.dart';
 import 'package:pub_server/shelf_pubserver.dart';
@@ -136,15 +136,16 @@ shelf.Request multipartRequest(Uri uri, List<int> bytes) {
   var requestBytes = [];
   String boundary = 'testboundary';
 
-  requestBytes.addAll(ASCII.encode('--$boundary\r\n'));
+  requestBytes.addAll(convert.ascii.encode('--$boundary\r\n'));
+  requestBytes.addAll(
+      convert.ascii.encode('Content-Type: application/octet-stream\r\n'));
   requestBytes
-      .addAll(ASCII.encode('Content-Type: application/octet-stream\r\n'));
-  requestBytes.addAll(ASCII.encode('Content-Length: ${bytes.length}\r\n'));
-  requestBytes.addAll(ASCII.encode('Content-Disposition: '
+      .addAll(convert.ascii.encode('Content-Length: ${bytes.length}\r\n'));
+  requestBytes.addAll(convert.ascii.encode('Content-Disposition: '
       'form-data; name="file"; '
       'filename="package.tar.gz"\r\n\r\n'));
   requestBytes.addAll(bytes);
-  requestBytes.addAll(ASCII.encode('\r\n--$boundary--\r\n'));
+  requestBytes.addAll(convert.ascii.encode('\r\n--$boundary--\r\n'));
 
   var headers = {
     'Content-Type': 'multipart/form-data; boundary="$boundary"',
@@ -200,7 +201,7 @@ main() {
       test('successful retrieval of version', () async {
         var mock = new RepositoryMock(versionsFun: (String package) {
           // The pubspec is invalid, but that is irrelevant for this test.
-          var pubspec = JSON.encode({'foo': 1});
+          var pubspec = convert.json.encode({'foo': 1});
           var analyzer = new PackageVersion('analyzer', '0.1.0', pubspec);
           return new Stream.fromIterable([analyzer]);
         });
@@ -211,14 +212,14 @@ main() {
 
         expect(response.mimeType, equals('application/json'));
         expect(response.statusCode, equals(200));
-        expect(JSON.decode(body), equals(expectedJson));
+        expect(convert.json.decode(body), equals(expectedJson));
       });
 
       test('successful retrieval of version - from cache', () async {
         var mock = new RepositoryMock();
         var cacheMock = new PackageCacheMock(getFun: expectAsync1((String pkg) {
           expect(pkg, equals('analyzer'));
-          return UTF8.encode('json response');
+          return convert.utf8.encode('json response');
         }));
         var server = new ShelfPubServer(mock, cache: cacheMock);
         var request = getRequest('/api/packages/analyzer');
@@ -233,7 +234,7 @@ main() {
       test('successful retrieval of version - populate cache', () async {
         var mock = new RepositoryMock(versionsFun: (String package) {
           // The pubspec is invalid, but that is irrelevant for this test.
-          var pubspec = JSON.encode({'foo': 1});
+          var pubspec = convert.json.encode({'foo': 1});
           var analyzer = new PackageVersion('analyzer', '0.1.0', pubspec);
           return new Stream.fromIterable([analyzer]);
         });
@@ -242,7 +243,8 @@ main() {
           return null;
         }), setFun: expectAsync2((String package, List<int> data) {
           expect(package, equals('analyzer'));
-          expect(JSON.decode(UTF8.decode(data)), equals(expectedJson));
+          expect(convert.json.decode(convert.utf8.decode(data)),
+              equals(expectedJson));
         }));
         var server = new ShelfPubServer(mock, cache: cacheMock);
         var request = getRequest('/api/packages/analyzer');
@@ -251,7 +253,7 @@ main() {
 
         expect(response.mimeType, equals('application/json'));
         expect(response.statusCode, equals(200));
-        expect(JSON.decode(body), equals(expectedJson));
+        expect(convert.json.decode(body), equals(expectedJson));
       });
     });
 
@@ -274,7 +276,7 @@ main() {
         var body = await response.readAsString();
 
         expect(response.statusCode, equals(400));
-        expect(JSON.decode(body)['error']['message'],
+        expect(convert.json.decode(body)['error']['message'],
             'Version string "0.1.0+@" is not a valid semantic version.');
       });
 
@@ -282,7 +284,7 @@ main() {
         var mock = new RepositoryMock(
             lookupVersionFun: (String package, String version) {
           // The pubspec is invalid, but that is irrelevant for this test.
-          var pubspec = JSON.encode({'foo': 1});
+          var pubspec = convert.json.encode({'foo': 1});
           return new PackageVersion(package, version, pubspec);
         });
         var server = new ShelfPubServer(mock);
@@ -299,7 +301,7 @@ main() {
 
         expect(response.mimeType, equals('application/json'));
         expect(response.statusCode, equals(200));
-        expect(JSON.decode(body), equals(expectedJson));
+        expect(convert.json.decode(body), equals(expectedJson));
       });
     });
 
@@ -379,7 +381,7 @@ main() {
           expect(response.statusCode, equals(200));
           expect(response.headers['content-type'], equals('application/json'));
 
-          var jsonBody = JSON.decode(await response.readAsString());
+          var jsonBody = convert.json.decode(await response.readAsString());
           expect(
               jsonBody,
               equals({
@@ -395,7 +397,7 @@ main() {
           // Call the `finishUrl`.
           request = new shelf.Request('GET', finishUrl);
           response = await server.requestHandler(request);
-          jsonBody = JSON.decode(await response.readAsString());
+          jsonBody = convert.json.decode(await response.readAsString());
           expect(
               jsonBody,
               equals({
@@ -432,7 +434,7 @@ main() {
           var response = await server.requestHandler(request);
           expect(response.statusCode, equals(200));
           expect(response.headers['content-type'], equals('application/json'));
-          var jsonBody = JSON.decode(await response.readAsString());
+          var jsonBody = convert.json.decode(await response.readAsString());
           expect(
               jsonBody,
               equals({
@@ -450,7 +452,7 @@ main() {
           // Call the `finishUrl`.
           request = new shelf.Request('GET', finishUrl);
           response = await server.requestHandler(request);
-          jsonBody = JSON.decode(await response.readAsString());
+          jsonBody = convert.json.decode(await response.readAsString());
           expect(
               jsonBody,
               equals({
@@ -483,7 +485,7 @@ main() {
         // Call the `finishUrl`.
         request = new shelf.Request('GET', finishUrl);
         response = await server.requestHandler(request);
-        var jsonBody = JSON.decode(await response.readAsString());
+        var jsonBody = convert.json.decode(await response.readAsString());
         expect(
             jsonBody,
             equals({

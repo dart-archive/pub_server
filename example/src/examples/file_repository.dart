@@ -5,10 +5,10 @@
 library appengine_pub.file_repository;
 
 import 'dart:async';
-import 'dart:convert';
 import 'dart:io';
 
 import 'package:archive/archive.dart';
+import 'package:dart2_constant/convert.dart' as convert;
 import 'package:logging/logging.dart';
 import 'package:path/path.dart' as p;
 import 'package:pub_server/repository.dart';
@@ -80,7 +80,7 @@ class FileRepository extends PackageRepository {
     }
 
     // TODO: Error handling.
-    var pubspec = loadYaml(UTF8.decode(_getBytes(pubspecArchiveFile)));
+    var pubspec = loadYaml(convert.utf8.decode(_getBytes(pubspecArchiveFile)));
 
     var package = pubspec['name'] as String;
     var version = pubspec['version'] as String;
@@ -96,7 +96,7 @@ class FileRepository extends PackageRepository {
       throw new StateError('`$package` already exists at version `$version`.');
     }
 
-    var pubspecContent = UTF8.decode(_getBytes(pubspecArchiveFile));
+    var pubspecContent = convert.utf8.decode(_getBytes(pubspecArchiveFile));
     pubspecFile.writeAsStringSync(pubspecContent);
     new File(packageTarballPath(package, version))
         .writeAsBytesSync(tarballBytes);
