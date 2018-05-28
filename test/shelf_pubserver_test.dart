@@ -133,7 +133,7 @@ shelf.Request getRequest(String path) {
 }
 
 shelf.Request multipartRequest(Uri uri, List<int> bytes) {
-  var requestBytes = [];
+  var requestBytes = <int>[];
   String boundary = 'testboundary';
 
   requestBytes.addAll(convert.ascii.encode('--$boundary\r\n'));
