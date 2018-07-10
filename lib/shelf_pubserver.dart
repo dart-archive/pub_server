@@ -251,8 +251,8 @@ class ShelfPubServer {
     // TODO: Add legacy entries (if necessary), such as version_url.
     Map packageVersion2Json(PackageVersion version) {
       return {
-        'archive_url': '${_downloadUrl(
-                  uri, version.packageName, version.versionString)}',
+        'archive_url':
+            '${_downloadUrl(uri, version.packageName, version.versionString)}',
         'pubspec': loadYaml(version.pubspecYaml),
         'version': version.versionString,
       };
@@ -288,8 +288,7 @@ class ShelfPubServer {
 
     // TODO: Add legacy entries (if necessary), such as version_url.
     return _jsonResponse({
-      'archive_url': '${_downloadUrl(
-                    uri, ver.packageName, ver.versionString)}',
+      'archive_url': '${_downloadUrl(uri, ver.packageName, ver.versionString)}',
       'pubspec': loadYaml(ver.pubspecYaml),
       'version': ver.versionString,
     });
