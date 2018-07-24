@@ -1,3 +1,9 @@
+## 0.1.4+1
+
+* Support Dart 2 stable releases.
+
+* Support latest release of `package:pub_semver`.
+
 ## 0.1.4
 
 * Dart 2 support with `dart2_constant`.
