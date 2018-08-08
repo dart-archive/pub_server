@@ -1,3 +1,7 @@
+## 0.1.5
+
+* Drop support for Dart 1.x.
+
 ## 0.1.4+1
 
 * Support Dart 2 stable releases.
