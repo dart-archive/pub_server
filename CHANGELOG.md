@@ -1,4 +1,4 @@
-## 0.1.5
+## 0.1.4+2
 
 * Drop support for Dart 1.x.
 
