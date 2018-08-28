@@ -330,13 +330,20 @@ class ShelfPubServer {
           'message': 'Successfully uploaded package.',
         },
       });
-    } catch (error, stack) {
-      _logger.warning('An error occured while finishing upload', error, stack);
+    } on ClientSideProblem catch (error, stack) {
+      _logger.info('A problem occured while finishing upload.', error, stack);
       return _jsonResponse({
         'error': {
           'message': '$error.',
         },
       }, status: 400);
+    } catch (error, stack) {
+      _logger.warning('An error occured while finishing upload.', error, stack);
+      return _jsonResponse({
+        'error': {
+          'message': '$error.',
+        },
+      }, status: 500);
     }
   }
 

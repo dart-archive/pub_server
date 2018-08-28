@@ -60,11 +60,14 @@ class AsyncUploadInfo {
   AsyncUploadInfo(this.uri, this.fields);
 }
 
+/// A marker interface that indicates a problem with the client-provided inputs.
+abstract class ClientSideProblem implements Exception {}
+
 /// Exception for unauthorized access attempts.
 ///
 /// Uploading a new package from an unauthorized user will result in an
 /// [UnauthorizedAccessException] exception.
-class UnauthorizedAccessException implements Exception {
+class UnauthorizedAccessException implements ClientSideProblem, Exception {
   final String message;
 
   UnauthorizedAccessException(this.message);
@@ -77,7 +80,7 @@ class UnauthorizedAccessException implements Exception {
 ///
 /// Removing the last user-email of a package can result in a
 /// [UnauthorizedAccessException] exception.
-class LastUploaderRemoveException implements Exception {
+class LastUploaderRemoveException implements ClientSideProblem, Exception {
   LastUploaderRemoveException();
 
   @override
@@ -89,7 +92,7 @@ class LastUploaderRemoveException implements Exception {
 ///
 /// Removing the last user-email of a package can result in a
 /// [UnauthorizedAccessException] exception.
-class UploaderAlreadyExistsException implements Exception {
+class UploaderAlreadyExistsException implements ClientSideProblem, Exception {
   UploaderAlreadyExistsException();
 
   @override
@@ -100,7 +103,7 @@ class UploaderAlreadyExistsException implements Exception {
 /// Generic exception during processing of the clients request.
 ///
 /// This may be an issue during validation of `pubspec.yaml`.
-class GenericProcessingException implements Exception {
+class GenericProcessingException implements ClientSideProblem, Exception {
   final String message;
 
   GenericProcessingException(this.message);
