@@ -32,12 +32,12 @@ class RepositoryMock implements PackageRepository {
       this.startAsyncUploadFun,
       this.uploadFun,
       this.versionsFun,
-      this.supportsAsyncUpload: false,
-      this.supportsDownloadUrl: false,
-      this.supportsUpload: false,
+      this.supportsAsyncUpload = false,
+      this.supportsDownloadUrl = false,
+      this.supportsUpload = false,
       this.addUploaderFun,
       this.removeUploaderFun,
-      this.supportsUploaders: false});
+      this.supportsUploaders = false});
 
   Future<Stream<List<int>>> download(String package, String version) async {
     if (downloadFun != null) return downloadFun(package, version);
