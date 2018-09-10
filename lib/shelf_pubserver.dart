@@ -474,12 +474,12 @@ class ShelfPubServer {
       }),
       headers: {'content-type': 'application/json'});
 
-  shelf.Response _binaryJsonResponse(List<int> d, {int status: 200}) =>
+  shelf.Response _binaryJsonResponse(List<int> d, {int status = 200}) =>
       new shelf.Response(status,
           body: new Stream.fromIterable([d]),
           headers: {'content-type': 'application/json'});
 
-  shelf.Response _jsonResponse(Map json, {int status: 200}) =>
+  shelf.Response _jsonResponse(Map json, {int status = 200}) =>
       new shelf.Response(status,
           body: convert.json.encode(json),
           headers: {'content-type': 'application/json'});
