@@ -3,14 +3,13 @@
 // BSD-style license that can be found in the LICENSE file.
 
 // ignore_for_file: annotate_overrides
-library pub_server.shelf_pubserver_test;
 
 import 'dart:async';
+import 'dart:convert' as convert;
 
-import 'package:dart2_constant/convert.dart' as convert;
-import 'package:shelf/shelf.dart' as shelf;
 import 'package:pub_server/repository.dart';
 import 'package:pub_server/shelf_pubserver.dart';
+import 'package:shelf/shelf.dart' as shelf;
 import 'package:test/test.dart';
 
 class RepositoryMock implements PackageRepository {
