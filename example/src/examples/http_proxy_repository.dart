@@ -27,15 +27,19 @@ class HttpProxyRepository extends PackageRepository {
         baseUrl.resolve('/api/packages/${Uri.encodeComponent(package)}');
 
     http.Response response = await client.get(versionUrl);
-    var json = convert.json.decode(response.body);
-    var versions = json['versions'] as List<Map>;
-    if (versions != null) {
-      for (var item in versions) {
-        var pubspec = item['pubspec'];
-        var pubspecString = convert.json.encode(pubspec);
-        yield new PackageVersion(pubspec['name'] as String,
-            pubspec['version'] as String, pubspecString);
+    if (response.statusCode == 200) {
+      var json = convert.json.decode(response.body);
+      var versions = json['versions'] as List<Map>;
+      if (versions != null) {
+        for (var item in versions) {
+          var pubspec = item['pubspec'];
+          var pubspecString = convert.json.encode(pubspec);
+          yield new PackageVersion(pubspec['name'] as String,
+              pubspec['version'] as String, pubspecString);
+        }
       }
+    } else {
+      yield null;
     }
   }
 
