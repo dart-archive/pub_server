@@ -49,7 +49,7 @@ class FileRepository extends PackageRepository {
         .where((pv) => pv.versionString == version)
         .toList()
         .then((List<PackageVersion> versions) {
-      if (versions.length >= 1) return versions.first;
+      if (versions.isNotEmpty) return versions.first;
       return null;
     });
   }
