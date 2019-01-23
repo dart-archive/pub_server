@@ -240,7 +240,7 @@ class ShelfPubServer {
     }
 
     var packageVersions = await repository.versions(package).toList();
-    if (packageVersions.length == 0) {
+    if (packageVersions.isEmpty) {
       return new shelf.Response.notFound(null);
     }
 
@@ -416,7 +416,7 @@ class ShelfPubServer {
 
   Future<shelf.Response> _addUploader(String package, String body) async {
     var parts = body.split('=');
-    if (parts.length == 2 && parts[0] == 'email' && parts[1].length > 0) {
+    if (parts.length == 2 && parts[0] == 'email' && parts[1].isNotEmpty) {
       try {
         var user = Uri.decodeQueryComponent(parts[1]);
         await repository.addUploader(package, user);

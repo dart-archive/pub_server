@@ -26,7 +26,7 @@ main(List<String> args) {
   var port = int.parse(results['port'] as String);
   var standalone = results['standalone'] as bool;
 
-  if (results.rest.length > 0) {
+  if (results.rest.isNotEmpty) {
     print('Got unexpected arguments: "${results.rest.join(' ')}".\n\nUsage:\n');
     print(parser.usage);
     exit(1);
