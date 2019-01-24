@@ -28,7 +28,7 @@ class HttpProxyRepository extends PackageRepository {
 
     http.Response response = await client.get(versionUrl);
     var json = convert.json.decode(response.body);
-    var versions = json['versions'] as List<Map>;
+    var versions = json['versions'] as List<dynamic>;
     if (versions != null) {
       for (var item in versions) {
         var pubspec = item['pubspec'];
