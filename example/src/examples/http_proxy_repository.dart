@@ -3,8 +3,8 @@
 // BSD-style license that can be found in the LICENSE file.
 
 import 'dart:async';
-
 import 'dart:convert' as convert;
+
 import 'package:http/http.dart' as http;
 import 'package:logging/logging.dart';
 import 'package:pub_server/repository.dart';
@@ -27,15 +27,22 @@ class HttpProxyRepository extends PackageRepository {
         baseUrl.resolve('/api/packages/${Uri.encodeComponent(package)}');
 
     http.Response response = await client.get(versionUrl);
-    var json = convert.json.decode(response.body);
-    var versions = json['versions'] as List<dynamic>;
-    if (versions != null) {
-      for (var item in versions) {
-        var pubspec = item['pubspec'];
-        var pubspecString = convert.json.encode(pubspec);
-        yield new PackageVersion(pubspec['name'] as String,
-            pubspec['version'] as String, pubspecString);
+    if (response.statusCode != 200) {
+      return;
+    }
+    try {
+      var json = convert.json.decode(response.body);
+      var versions = json['versions'] as List<dynamic>;
+      if (versions != null) {
+        for (var item in versions) {
+          var pubspec = item['pubspec'];
+          var pubspecString = convert.json.encode(pubspec);
+          yield new PackageVersion(pubspec['name'] as String,
+              pubspec['version'] as String, pubspecString);
+        }
       }
+    } catch (e) {
+      print("Cannot decode '${response.body}' to JSON. Error occured: $e");
     }
   }
 
