@@ -14,7 +14,7 @@ import 'package:yaml/yaml.dart';
 
 import 'repository.dart';
 
-final Logger _logger = new Logger('pubserver.shelf_pubserver');
+final Logger _logger = Logger('pubserver.shelf_pubserver');
 
 // TODO: Error handling from [PackageRepo] class.
 // Distinguish between:
@@ -126,19 +126,19 @@ final Logger _logger = new Logger('pubserver.shelf_pubserver');
 /// It will use the pub [PackageRepository] given in the constructor to provide
 /// this HTTP endpoint.
 class ShelfPubServer {
-  static final RegExp _packageRegexp = new RegExp(r'^/api/packages/([^/]+)$');
+  static final RegExp _packageRegexp = RegExp(r'^/api/packages/([^/]+)$');
 
   static final RegExp _versionRegexp =
-      new RegExp(r'^/api/packages/([^/]+)/versions/([^/]+)$');
+      RegExp(r'^/api/packages/([^/]+)/versions/([^/]+)$');
 
   static final RegExp _addUploaderRegexp =
-      new RegExp(r'^/api/packages/([^/]+)/uploaders$');
+      RegExp(r'^/api/packages/([^/]+)/uploaders$');
 
   static final RegExp _removeUploaderRegexp =
-      new RegExp(r'^/api/packages/([^/]+)/uploaders/([^/]+)$');
+      RegExp(r'^/api/packages/([^/]+)/uploaders/([^/]+)$');
 
   static final RegExp _downloadRegexp =
-      new RegExp(r'^/packages/([^/]+)/versions/([^/]+)\.tar\.gz$');
+      RegExp(r'^/packages/([^/]+)/versions/([^/]+)\.tar\.gz$');
 
   final PackageRepository repository;
   final PackageCache cache;
@@ -172,7 +172,7 @@ class ShelfPubServer {
 
       if (path == '/api/packages/versions/new') {
         if (!repository.supportsUpload) {
-          return new shelf.Response.notFound(null);
+          return shelf.Response.notFound(null);
         }
 
         if (repository.supportsAsyncUpload) {
@@ -184,7 +184,7 @@ class ShelfPubServer {
 
       if (path == '/api/packages/versions/newUploadFinish') {
         if (!repository.supportsUpload) {
-          return new shelf.Response.notFound(null);
+          return shelf.Response.notFound(null);
         }
 
         if (repository.supportsAsyncUpload) {
@@ -196,14 +196,14 @@ class ShelfPubServer {
     } else if (request.method == 'POST') {
       if (path == '/api/packages/versions/newUpload') {
         if (!repository.supportsUpload) {
-          return new shelf.Response.notFound(null);
+          return shelf.Response.notFound(null);
         }
 
         return _uploadSimple(request.requestedUri,
             request.headers['content-type'], request.read());
       } else {
         if (!repository.supportsUploaders) {
-          return new shelf.Response.notFound(null);
+          return shelf.Response.notFound(null);
         }
 
         var addUploaderMatch = _addUploaderRegexp.matchAsPrefix(path);
@@ -216,7 +216,7 @@ class ShelfPubServer {
       }
     } else if (request.method == 'DELETE') {
       if (!repository.supportsUploaders) {
-        return new shelf.Response.notFound(null);
+        return shelf.Response.notFound(null);
       }
 
       var removeUploaderMatch = _removeUploaderRegexp.matchAsPrefix(path);
@@ -226,7 +226,7 @@ class ShelfPubServer {
         return removeUploader(package, user);
       }
     }
-    return new shelf.Response.notFound(null);
+    return shelf.Response.notFound(null);
   }
 
   // Metadata handlers.
@@ -241,7 +241,7 @@ class ShelfPubServer {
 
     var packageVersions = await repository.versions(package).toList();
     if (packageVersions.isEmpty) {
-      return new shelf.Response.notFound(null);
+      return shelf.Response.notFound(null);
     }
 
     packageVersions.sort((a, b) => a.version.compareTo(b.version));
@@ -281,7 +281,7 @@ class ShelfPubServer {
       Uri uri, String package, String version) async {
     var ver = await repository.lookupVersion(package, version);
     if (ver == null) {
-      return new shelf.Response.notFound(null);
+      return shelf.Response.notFound(null);
     }
 
     // TODO: Add legacy entries (if necessary), such as version_url.
@@ -299,11 +299,11 @@ class ShelfPubServer {
     if (repository.supportsDownloadUrl) {
       var url = await repository.downloadUrl(package, version);
       // This is a redirect to [url]
-      return new shelf.Response.seeOther(url);
+      return shelf.Response.seeOther(url);
     }
 
     var stream = await repository.download(package, version);
-    return new shelf.Response.ok(stream);
+    return shelf.Response.ok(stream);
   }
 
   // Upload async handlers.
@@ -374,7 +374,7 @@ class ShelfPubServer {
     MimeMultipart thePart;
 
     await for (MimeMultipart part
-        in stream.transform(new MimeMultipartTransformer(boundary))) {
+        in stream.transform(MimeMultipartTransformer(boundary))) {
       // If we get more than one part, we'll ignore the rest of the input.
       if (thePart != null) {
         continue;
@@ -392,11 +392,11 @@ class ShelfPubServer {
         await cache.invalidatePackageData(version.packageName);
       }
       _logger.info('Redirecting to found url.');
-      return new shelf.Response.found(_finishUploadSimpleUrl(uri));
+      return shelf.Response.found(_finishUploadSimpleUrl(uri));
     } catch (error, stack) {
       _logger.warning('Error occured', error, stack);
       // TODO: Do error checking and return error codes?
-      return new shelf.Response.found(
+      return shelf.Response.found(
           _finishUploadSimpleUrl(uri, error: error.toString()));
     }
   }
@@ -453,32 +453,32 @@ class ShelfPubServer {
       _badRequest('Version string "$version" is not a valid semantic version.');
 
   Future<shelf.Response> _successfullRequest(String message) async {
-    return new shelf.Response(200,
+    return shelf.Response(200,
         body: convert.json.encode({
           'success': {'message': message}
         }),
         headers: {'content-type': 'application/json'});
   }
 
-  shelf.Response _unauthorizedRequest() => new shelf.Response(403,
+  shelf.Response _unauthorizedRequest() => shelf.Response(403,
       body: convert.json.encode({
         'error': {'message': 'Unauthorized request.'}
       }),
       headers: {'content-type': 'application/json'});
 
-  shelf.Response _badRequest(String message) => new shelf.Response(400,
+  shelf.Response _badRequest(String message) => shelf.Response(400,
       body: convert.json.encode({
         'error': {'message': message}
       }),
       headers: {'content-type': 'application/json'});
 
   shelf.Response _binaryJsonResponse(List<int> d, {int status = 200}) =>
-      new shelf.Response(status,
-          body: new Stream.fromIterable([d]),
+      shelf.Response(status,
+          body: Stream.fromIterable([d]),
           headers: {'content-type': 'application/json'});
 
   shelf.Response _jsonResponse(Map json, {int status = 200}) =>
-      new shelf.Response(status,
+      shelf.Response(status,
           body: convert.json.encode(json),
           headers: {'content-type': 'application/json'});
 
@@ -507,7 +507,7 @@ class ShelfPubServer {
 
   bool isSemanticVersion(String version) {
     try {
-      new semver.Version.parse(version);
+      semver.Version.parse(version);
       return true;
     } catch (_) {
       return false;
@@ -525,7 +525,7 @@ abstract class PackageCache {
 }
 
 String _getBoundary(String contentType) {
-  var mediaType = new MediaType.parse(contentType);
+  var mediaType = MediaType.parse(contentType);
 
   if (mediaType.type == 'multipart' && mediaType.subtype == 'form-data') {
     return mediaType.parameters['boundary'];

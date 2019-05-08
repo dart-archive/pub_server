@@ -24,7 +24,7 @@ class PackageVersion {
   /// The version of the package as a [Version] object.
   Version get version {
     if (_cached != null) return _cached;
-    _cached = new Version.parse(versionString);
+    _cached = Version.parse(versionString);
     return _cached;
   }
 
@@ -109,7 +109,7 @@ class GenericProcessingException implements ClientSideProblem, Exception {
   GenericProcessingException(this.message);
 
   factory GenericProcessingException.validationError(String message) =>
-      new GenericProcessingException('ValidationError: $message');
+      GenericProcessingException('ValidationError: $message');
 
   @override
   String toString() => message;
@@ -130,7 +130,7 @@ abstract class PackageRepository {
   ///
   /// [data] must be a stream of a valid .tar.gz file.
   Future<PackageVersion> upload(Stream<List<int>> data) async =>
-      throw new UnsupportedError('No upload support.');
+      throw UnsupportedError('No upload support.');
 
   /// Whether this package repository supports asynchronous uploads.
   bool get supportsAsyncUpload => false;
@@ -144,11 +144,11 @@ abstract class PackageRepository {
   /// The returned [AsyncUploadInfo] specifies where the tar.gz file should be
   /// posted to and what headers should be supplied.
   Future<AsyncUploadInfo> startAsyncUpload(Uri redirectUrl) async =>
-      throw new UnsupportedError('No async upload support.');
+      throw UnsupportedError('No async upload support.');
 
   /// Finishes the upload of a package.
   Future<PackageVersion> finishAsyncUpload(Uri uri) async =>
-      throw new UnsupportedError('No async upload support.');
+      throw UnsupportedError('No async upload support.');
 
   /// Downloads a pub package.
   Future<Stream<List<int>>> download(String package, String version);
@@ -158,16 +158,16 @@ abstract class PackageRepository {
 
   /// A permanent download URL to a package (if supported).
   Future<Uri> downloadUrl(String package, String version) async =>
-      throw new UnsupportedError('No download link support.');
+      throw UnsupportedError('No download link support.');
 
   /// Whether this package repository supports adding/removing users.
   bool get supportsUploaders => false;
 
   /// Adds [userEmail] as an uploader to [package].
   Future addUploader(String package, String userEmail) async =>
-      throw new UnsupportedError('No uploader support.');
+      throw UnsupportedError('No uploader support.');
 
   /// Removes [userEmail] as an uploader from [package].
   Future removeUploader(String package, String userEmail) async =>
-      throw new UnsupportedError('No uploader support.');
+      throw UnsupportedError('No uploader support.');
 }
