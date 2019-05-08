@@ -37,13 +37,13 @@ main(List<String> args) {
 }
 
 runPubServer(String baseDir, String host, int port, bool standalone) {
-  var client = new http.Client();
+  var client = http.Client();
 
-  var local = new FileRepository(baseDir);
-  var remote = new HttpProxyRepository(client, pubDartLangOrg);
-  var cow = new CopyAndWriteRepository(local, remote, standalone);
+  var local = FileRepository(baseDir);
+  var remote = HttpProxyRepository(client, pubDartLangOrg);
+  var cow = CopyAndWriteRepository(local, remote, standalone);
 
-  var server = new ShelfPubServer(cow);
+  var server = ShelfPubServer(cow);
   print('Listening on http://$host:$port\n'
       '\n'
       'To make the pub client use this repository configure your shell via:\n'
@@ -60,7 +60,7 @@ runPubServer(String baseDir, String host, int port, bool standalone) {
 }
 
 ArgParser argsParser() {
-  var parser = new ArgParser();
+  var parser = ArgParser();
 
   parser.addOption('directory',
       abbr: 'd', defaultsTo: 'pub_server-repository-data');

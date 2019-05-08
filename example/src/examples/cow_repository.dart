@@ -9,7 +9,7 @@ import 'dart:async';
 import 'package:logging/logging.dart';
 import 'package:pub_server/repository.dart';
 
-final Logger _logger = new Logger('pub_server.cow_repository');
+final Logger _logger = Logger('pub_server.cow_repository');
 
 /// A [CopyAndWriteRepository] writes to one repository and directs
 /// read-misses to another repository.
@@ -35,8 +35,8 @@ class CopyAndWriteRepository extends PackageRepository {
       : this.local = local,
         this.remote = remote,
         this.standalone = standalone,
-        this._localCache = new _RemoteMetadataCache(local),
-        this._remoteCache = new _RemoteMetadataCache(remote);
+        this._localCache = _RemoteMetadataCache(local),
+        this._remoteCache = _RemoteMetadataCache(remote);
 
   @override
   Stream<PackageVersion> versions(String package) {
@@ -47,16 +47,18 @@ class CopyAndWriteRepository extends PackageRepository {
         waitList.add(_remoteCache.fetchVersionlist(package));
       }
       Future.wait(waitList).then((tuple) {
-        var versions = new Set<PackageVersion>()..addAll(tuple[0]);
+        var versions = Set<PackageVersion>()..addAll(tuple[0]);
         if (standalone != true) {
           versions.addAll(tuple[1]);
         }
-        for (var version in versions) controller.add(version);
+        for (var version in versions) {
+          controller.add(version);
+        }
         controller.close();
       });
     }
 
-    controller = new StreamController(onListen: onListen);
+    controller = StreamController(onListen: onListen);
     return controller.stream;
   }
 
@@ -129,9 +131,9 @@ class _RemoteMetadataCache {
   Future<List<PackageVersion>> fetchVersionlist(String package) {
     return _versionCompleters
         .putIfAbsent(package, () {
-          var c = new Completer<Set<PackageVersion>>();
+          var c = Completer<Set<PackageVersion>>();
 
-          _versions.putIfAbsent(package, () => new Set());
+          _versions.putIfAbsent(package, () => Set());
           remote.versions(package).toList().then((versions) {
             _versions[package].addAll(versions);
             c.complete(_versions[package]);
@@ -144,7 +146,7 @@ class _RemoteMetadataCache {
   }
 
   void addVersion(String package, PackageVersion version) {
-    _versions.putIfAbsent(version.packageName, () => new Set()).add(version);
+    _versions.putIfAbsent(version.packageName, () => Set()).add(version);
   }
 
   void invalidateAll() {

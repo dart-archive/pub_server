@@ -9,7 +9,7 @@ import 'package:http/http.dart' as http;
 import 'package:logging/logging.dart';
 import 'package:pub_server/repository.dart';
 
-final Logger _logger = new Logger('pub_server.http_proxy_repository');
+final Logger _logger = Logger('pub_server.http_proxy_repository');
 
 /// Implements the [PackageRepository] by talking to a remote HTTP server via
 /// the pub HTTP API.
@@ -33,7 +33,7 @@ class HttpProxyRepository extends PackageRepository {
       for (var item in versions) {
         var pubspec = item['pubspec'];
         var pubspecString = convert.json.encode(pubspec);
-        yield new PackageVersion(pubspec['name'] as String,
+        yield PackageVersion(pubspec['name'] as String,
             pubspec['version'] as String, pubspecString);
       }
     }
@@ -74,7 +74,7 @@ class HttpProxyRepository extends PackageRepository {
     _logger.info('Downloading package $package/$version.');
 
     var url = await downloadUrl(package, version);
-    var response = await client.send(new http.Request('GET', url));
+    var response = await client.send(http.Request('GET', url));
     return response.stream;
   }
 }
