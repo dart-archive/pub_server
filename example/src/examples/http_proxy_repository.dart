@@ -44,18 +44,22 @@ class HttpProxyRepository extends PackageRepository {
     }
   }
 
-  // TODO: Could be optimized, since we don't need to list all versions and can
-  // just talk to the HTTP endpoint which gives us a specific package/version
-  // combination.
   @override
-  Future<PackageVersion> lookupVersion(String package, String version) {
-    return versions(package)
-        .where((v) => v.packageName == package && v.versionString == version)
-        .toList()
-        .then((List<PackageVersion> versions) {
-      if (versions.isNotEmpty) return versions.first;
+  Future<PackageVersion> lookupVersion(String package, String version) async {
+    Uri versionUrl = baseUrl.resolve(
+        '/api/packages/${Uri.encodeComponent(package)}/versions/${Uri.encodeComponent(version)}');
+
+    http.Response response = await client.get(versionUrl);
+
+    if (response.statusCode != 200) {
       return null;
-    });
+    }
+
+    var json = convert.json.decode(response.body);
+    var pubspec = json['pubspec'];
+    var pubspecString = convert.json.encode(pubspec);
+    return PackageVersion(
+        pubspec['name'] as String, pubspec['version'] as String, pubspecString);
   }
 
   @override

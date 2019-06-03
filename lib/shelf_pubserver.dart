@@ -323,25 +323,14 @@ class ShelfPubServer {
         _logger.info('Invalidating cache for package ${vers.packageName}.');
         await cache.invalidatePackageData(vers.packageName);
       }
-      return _jsonResponse({
-        'success': {
-          'message': 'Successfully uploaded package.',
-        },
-      });
+
+      return _successfullRequest('Successfully uploaded package.');
     } on ClientSideProblem catch (error, stack) {
       _logger.info('A problem occured while finishing upload.', error, stack);
-      return _jsonResponse({
-        'error': {
-          'message': '$error.',
-        },
-      }, status: 400);
+      return _badRequest(error.toString());
     } catch (error, stack) {
       _logger.warning('An error occured while finishing upload.', error, stack);
-      return _jsonResponse({
-        'error': {
-          'message': '$error.',
-        },
-      }, status: 500);
+      return _serverError(error.toString());
     }
   }
 
@@ -393,6 +382,10 @@ class ShelfPubServer {
       }
       _logger.info('Redirecting to found url.');
       return shelf.Response.found(_finishUploadSimpleUrl(uri));
+    } on PackageAlreadyExistException catch (error) {
+      _logger.warning(error.toString());
+      return shelf.Response.found(
+          _finishUploadSimpleUrl(uri, error: error.toString()));
     } catch (error, stack) {
       _logger.warning('Error occured', error, stack);
       // TODO: Do error checking and return error codes?
@@ -449,22 +442,26 @@ class ShelfPubServer {
 
   // Helper functions.
 
-  shelf.Response _invalidVersion(String version) =>
-      _badRequest('Version string "$version" is not a valid semantic version.');
+  shelf.Response _successfullRequest(String message) => shelf.Response(200,
+      body: convert.json.encode({
+        'success': {'message': message}
+      }),
+      headers: {'content-type': 'application/json'});
 
-  Future<shelf.Response> _successfullRequest(String message) async {
-    return shelf.Response(200,
-        body: convert.json.encode({
-          'success': {'message': message}
-        }),
-        headers: {'content-type': 'application/json'});
-  }
+  shelf.Response _serverError(String message) => shelf.Response(500,
+      body: convert.json.encode({
+        'error': {'message': message}
+      }),
+      headers: {'content-type': 'application/json'});
 
   shelf.Response _unauthorizedRequest() => shelf.Response(403,
       body: convert.json.encode({
         'error': {'message': 'Unauthorized request.'}
       }),
       headers: {'content-type': 'application/json'});
+
+  shelf.Response _invalidVersion(String version) =>
+      _badRequest('Version string "$version" is not a valid semantic version.');
 
   shelf.Response _badRequest(String message) => shelf.Response(400,
       body: convert.json.encode({

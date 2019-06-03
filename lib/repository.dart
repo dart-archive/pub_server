@@ -63,6 +63,19 @@ class AsyncUploadInfo {
 /// A marker interface that indicates a problem with the client-provided inputs.
 abstract class ClientSideProblem implements Exception {}
 
+/// Exception for upload an already published version of the package.
+///
+/// Сalled when a package with this version was previously published
+/// [PackageAlreadyExistException] exception.
+class PackageAlreadyExistException implements ClientSideProblem, Exception {
+  final String message;
+
+  PackageAlreadyExistException(this.message);
+
+  @override
+  String toString() => 'NotAcceptable: $message';
+}
+
 /// Exception for unauthorized access attempts.
 ///
 /// Uploading a new package from an unauthorized user will result in an

@@ -15,8 +15,6 @@ import 'src/examples/cow_repository.dart';
 import 'src/examples/file_repository.dart';
 import 'src/examples/http_proxy_repository.dart';
 
-final Uri pubDartLangOrg = Uri.parse('https://pub.dartlang.org');
-
 main(List<String> args) {
   var parser = argsParser();
   var results = parser.parse(args);
@@ -24,6 +22,7 @@ main(List<String> args) {
   var directory = results['directory'] as String;
   var host = results['host'] as String;
   var port = int.parse(results['port'] as String);
+  var proxyUrl = Uri.parse(results['proxyUrl'] as String);
   var standalone = results['standalone'] as bool;
 
   if (results.rest.isNotEmpty) {
@@ -33,14 +32,15 @@ main(List<String> args) {
   }
 
   setupLogger();
-  runPubServer(directory, host, port, standalone);
+  runPubServer(directory, host, port, proxyUrl, standalone);
 }
 
-runPubServer(String baseDir, String host, int port, bool standalone) {
+runPubServer(
+    String baseDir, String host, int port, Uri proxyUrl, bool standalone) {
   var client = http.Client();
 
   var local = FileRepository(baseDir);
-  var remote = HttpProxyRepository(client, pubDartLangOrg);
+  var remote = HttpProxyRepository(client, proxyUrl);
   var cow = CopyAndWriteRepository(local, remote, standalone);
 
   var server = ShelfPubServer(cow);
@@ -66,8 +66,9 @@ ArgParser argsParser() {
       abbr: 'd', defaultsTo: 'pub_server-repository-data');
 
   parser.addOption('host', abbr: 'h', defaultsTo: 'localhost');
-
   parser.addOption('port', abbr: 'p', defaultsTo: '8080');
+  parser.addOption('proxy-url', defaultsTo: 'https://pub.dartlang.org');
+
   parser.addFlag('standalone', abbr: 's', defaultsTo: false);
   return parser;
 }

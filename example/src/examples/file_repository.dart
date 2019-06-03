@@ -29,11 +29,9 @@ class FileRepository extends PackageRepository {
           .where((fse) => fse is Directory)
           .map((dir) {
         var version = p.basename(dir.path);
-        var pubspecFile = File(pubspecFilePath(package, version));
-        var tarballFile = File(packageTarballPath(package, version));
-        if (pubspecFile.existsSync() && tarballFile.existsSync()) {
-          var pubspec = pubspecFile.readAsStringSync();
-          return PackageVersion(package, version, pubspec);
+        var packageVersion = _getSpecificVersion(package, version);
+        if (packageVersion != null) {
+          return packageVersion;
         }
       });
     }
@@ -41,17 +39,20 @@ class FileRepository extends PackageRepository {
     return Stream.fromIterable([]);
   }
 
-  // TODO: Could be optimized by searching for the exact package/version
-  // combination instead of enumerating all.
   @override
   Future<PackageVersion> lookupVersion(String package, String version) {
-    return versions(package)
-        .where((pv) => pv.versionString == version)
-        .toList()
-        .then((List<PackageVersion> versions) {
-      if (versions.isNotEmpty) return versions.first;
+    return Future.value(_getSpecificVersion(package, version));
+  }
+
+  PackageVersion _getSpecificVersion(String package, String version) {
+    var pubspecFile = File(pubspecFilePath(package, version));
+    var tarballFile = File(packageTarballPath(package, version));
+    if (pubspecFile.existsSync() && tarballFile.existsSync()) {
+      var pubspec = pubspecFile.readAsStringSync();
+      return PackageVersion(package, version, pubspec);
+    } else {
       return null;
-    });
+    }
   }
 
   @override
@@ -91,7 +92,8 @@ class FileRepository extends PackageRepository {
 
     var pubspecFile = File(pubspecFilePath(package, version));
     if (pubspecFile.existsSync()) {
-      throw StateError('`$package` already exists at version `$version`.');
+      throw PackageAlreadyExistException(
+          '`$package` already exists at version `$version`.');
     }
 
     var pubspecContent = convert.utf8.decode(_getBytes(pubspecArchiveFile));

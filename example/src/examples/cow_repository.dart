@@ -21,10 +21,8 @@ final Logger _logger = Logger('pub_server.cow_repository');
 ///
 /// New package versions which get uploaded will be stored only locally.
 class CopyAndWriteRepository extends PackageRepository {
-  final PackageRepository local;
-  final PackageRepository remote;
-  final _RemoteMetadataCache _localCache;
-  final _RemoteMetadataCache _remoteCache;
+  final PackageRepository local, remote;
+  final _RemoteMetadataCache _localCache, _remoteCache;
   final bool standalone;
 
   /// Construct a new proxy with [local] as the local [PackageRepository] which
@@ -35,8 +33,8 @@ class CopyAndWriteRepository extends PackageRepository {
       : this.local = local,
         this.remote = remote,
         this.standalone = standalone,
-        this._localCache = _RemoteMetadataCache(local),
-        this._remoteCache = _RemoteMetadataCache(remote);
+        this._localCache = _RemoteMetadataCache(local, Duration(hours: 12)),
+        this._remoteCache = _RemoteMetadataCache(remote, Duration(hours: 12));
 
   @override
   Stream<PackageVersion> versions(String package) {
@@ -63,14 +61,13 @@ class CopyAndWriteRepository extends PackageRepository {
   }
 
   @override
-  Future<PackageVersion> lookupVersion(String package, String version) {
-    return versions(package)
-        .where((pv) => pv.versionString == version)
-        .toList()
-        .then((List<PackageVersion> versions) {
-      if (versions.isNotEmpty) return versions.first;
-      return null;
-    });
+  Future<PackageVersion> lookupVersion(String package, String version) async {
+    var localVersion = await local.lookupVersion(package, version);
+    if (localVersion != null) {
+      return localVersion;
+    }
+
+    return remote.lookupVersion(package, version);
   }
 
   @override
@@ -102,11 +99,9 @@ class CopyAndWriteRepository extends PackageRepository {
   Future<PackageVersion> upload(Stream<List<int>> data) async {
     _logger.info('Starting upload to local package repository.');
     final pkgVersion = await local.upload(data);
-    // TODO: It's not really necessary to invalidate all.
     _logger.info(
-        'Upload finished - ${pkgVersion.packageName}@${pkgVersion.version}. '
-        'Invalidating in-memory cache.');
-    _localCache.invalidateAll();
+        'Upload finished - ${pkgVersion.packageName}@${pkgVersion.version}.');
+    _localCache.addVersion(pkgVersion);
     return pkgVersion;
   }
 
@@ -120,21 +115,29 @@ class CopyAndWriteRepository extends PackageRepository {
 /// the cache.
 class _RemoteMetadataCache {
   final PackageRepository remote;
+  final Duration maxCacheAge;
 
   final Map<String, Set<PackageVersion>> _versions = {};
   final Map<String, Completer<Set<PackageVersion>>> _versionCompleters = {};
 
-  _RemoteMetadataCache(this.remote);
+  _RemoteMetadataCache(this.remote, this.maxCacheAge) {
+    Timer.periodic(maxCacheAge, (timer) {
+      _logger.info('Invalidating in-memory cache.');
+      _invalidateAll();
+    });
+  }
 
-  // TODO: After a cache expiration we should invalidate entries and re-fetch
-  // them.
   Future<List<PackageVersion>> fetchVersionlist(String package) {
     return _versionCompleters
         .putIfAbsent(package, () {
           var c = Completer<Set<PackageVersion>>();
 
           _versions.putIfAbsent(package, () => Set());
-          remote.versions(package).toList().then((versions) {
+          remote
+              .versions(package)
+              .where((v) => v != null)
+              .toList()
+              .then((versions) {
             _versions[package].addAll(versions);
             c.complete(_versions[package]);
           });
@@ -145,11 +148,13 @@ class _RemoteMetadataCache {
         .then((set) => set.toList());
   }
 
-  void addVersion(String package, PackageVersion version) {
-    _versions.putIfAbsent(version.packageName, () => Set()).add(version);
+  void addVersion(PackageVersion packageVersion) {
+    _versions
+        .putIfAbsent(packageVersion.packageName, () => Set())
+        .add(packageVersion);
   }
 
-  void invalidateAll() {
+  void _invalidateAll() {
     _versionCompleters.clear();
     _versions.clear();
   }
