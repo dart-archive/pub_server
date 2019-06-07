@@ -35,7 +35,8 @@ class FileRepository extends PackageRepository {
           var pubspec = pubspecFile.readAsStringSync();
           return PackageVersion(package, version, pubspec);
         }
-      });
+        return null;
+      }).where((e) => e != null);
     }
 
     return Stream.fromIterable([]);
