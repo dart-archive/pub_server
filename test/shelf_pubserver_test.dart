@@ -522,6 +522,7 @@ main() {
               addUploaderFun: expectAsync2((package, user) {
                 expect(package, equals('pkg'));
                 expect(user, equals('hans'));
+                return null;
               }));
 
           var server = ShelfPubServer(mock);
@@ -578,6 +579,7 @@ main() {
               removeUploaderFun: expectAsync2((package, user) {
                 expect(package, equals('pkg'));
                 expect(user, equals('hans'));
+                return null;
               }));
 
           var server = ShelfPubServer(mock);
