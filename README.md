@@ -1,3 +1,5 @@
+# NOTE: This is package is an alpha version and is not recommended for production use.
+
 Provides re-usable code for making a Dart package repository server.
 The `package:pub_server/shelf_pubserver.dart` library provides a [shelf] HTTP
 handler which provides the HTTP API used by the pub client.
@@ -51,8 +53,5 @@ which requires a Google account - is due to the fact that the `pub publish`
 cannot work without authentication or with another authentication scheme.
 *But the information sent by the pub client is not used for this local server
 at the moment*.
-
-NOTE: This is package is an alpha version and is not recommended for production
-use.
 
 [shelf]: https://pub.dartlang.org/packages/shelf
