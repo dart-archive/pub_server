@@ -5,11 +5,11 @@
 import 'dart:io';
 
 import 'package:args/args.dart';
+import 'package:http/http.dart' as http;
 import 'package:logging/logging.dart';
+import 'package:pub_server/shelf_pubserver.dart';
 import 'package:shelf/shelf.dart';
 import 'package:shelf/shelf_io.dart' as shelf_io;
-import 'package:http/http.dart' as http;
-import 'package:pub_server/shelf_pubserver.dart';
 
 import 'src/examples/cow_repository.dart';
 import 'src/examples/file_repository.dart';
@@ -17,7 +17,7 @@ import 'src/examples/http_proxy_repository.dart';
 
 final Uri pubDartLangOrg = Uri.parse('https://pub.dartlang.org');
 
-main(List<String> args) {
+void main(List<String> args) {
   var parser = argsParser();
   var results = parser.parse(args);
 
@@ -36,7 +36,8 @@ main(List<String> args) {
   runPubServer(directory, host, port, standalone);
 }
 
-runPubServer(String baseDir, String host, int port, bool standalone) {
+Future<HttpServer> runPubServer(
+    String baseDir, String host, int port, bool standalone) {
   var client = http.Client();
 
   var local = FileRepository(baseDir);
