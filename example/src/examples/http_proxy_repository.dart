@@ -23,10 +23,10 @@ class HttpProxyRepository extends PackageRepository {
 
   @override
   Stream<PackageVersion> versions(String package) async* {
-    Uri versionUrl =
+    var versionUrl =
         baseUrl.resolve('/api/packages/${Uri.encodeComponent(package)}');
 
-    http.Response response = await client.get(versionUrl);
+    var response = await client.get(versionUrl);
 
     if (response.statusCode != 200) {
       return;

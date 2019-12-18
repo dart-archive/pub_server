@@ -146,7 +146,7 @@ class ShelfPubServer {
   ShelfPubServer(this.repository, {this.cache});
 
   Future<shelf.Response> requestHandler(shelf.Request request) async {
-    String path = request.requestedUri.path;
+    var path = request.requestedUri.path;
     if (request.method == 'GET') {
       var downloadMatch = _downloadRegexp.matchAsPrefix(path);
       if (downloadMatch != null) {
@@ -208,7 +208,7 @@ class ShelfPubServer {
 
         var addUploaderMatch = _addUploaderRegexp.matchAsPrefix(path);
         if (addUploaderMatch != null) {
-          String package = Uri.decodeComponent(addUploaderMatch.group(1));
+          var package = Uri.decodeComponent(addUploaderMatch.group(1));
           return request.readAsString().then((String body) {
             return _addUploader(package, body);
           });
@@ -221,8 +221,8 @@ class ShelfPubServer {
 
       var removeUploaderMatch = _removeUploaderRegexp.matchAsPrefix(path);
       if (removeUploaderMatch != null) {
-        String package = Uri.decodeComponent(removeUploaderMatch.group(1));
-        String user = Uri.decodeComponent(removeUploaderMatch.group(2));
+        var package = Uri.decodeComponent(removeUploaderMatch.group(1));
+        var user = Uri.decodeComponent(removeUploaderMatch.group(2));
         return removeUploader(package, user);
       }
     }
@@ -257,7 +257,7 @@ class ShelfPubServer {
     }
 
     var latestVersion = packageVersions.last;
-    for (int i = packageVersions.length - 1; i >= 0; i--) {
+    for (var i = packageVersions.length - 1; i >= 0; i--) {
       if (!packageVersions[i].version.isPreRelease) {
         latestVersion = packageVersions[i];
         break;

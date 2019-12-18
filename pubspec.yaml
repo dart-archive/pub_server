@@ -5,7 +5,7 @@ description: Re-usable components for creating a custom Dart package server.
 homepage: https://github.com/dart-lang/pub_server
 
 environment:
-  sdk: '>=2.0.0 <3.0.0'
+  sdk: '>=2.2.0 <3.0.0'
 
 dependencies:
   http_parser: ^3.0.0

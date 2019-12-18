@@ -133,7 +133,7 @@ shelf.Request getRequest(String path) {
 
 shelf.Request multipartRequest(Uri uri, List<int> bytes) {
   var requestBytes = <int>[];
-  String boundary = 'testboundary';
+  var boundary = 'testboundary';
 
   requestBytes.addAll(convert.ascii.encode('--$boundary\r\n'));
   requestBytes.addAll(
@@ -155,13 +155,13 @@ shelf.Request multipartRequest(Uri uri, List<int> bytes) {
   return shelf.Request('POST', uri, headers: headers, body: body);
 }
 
-main() {
+void main() {
   group('shelf_pubserver', () {
     test('invalid endpoint', () async {
       var mock = RepositoryMock();
       var server = ShelfPubServer(mock);
 
-      testInvalidUrl(String path) async {
+      Future<void> testInvalidUrl(String path) async {
         var request = getRequest(path);
         var response = await server.requestHandler(request);
         await response.read().drain();
@@ -345,7 +345,7 @@ main() {
     });
 
     group('/api/packages/versions/new', () {
-      for (bool useMemcache in [false, true]) {
+      for (var useMemcache in [false, true]) {
         test('async successfull use-memcache($useMemcache)', () async {
           var expectedUrl = Uri.parse('https://storage.googleapis.com');
           var foobarUrl = Uri.parse('https://foobar.com/package/done');
@@ -404,7 +404,7 @@ main() {
         });
       }
 
-      for (bool useMemcache in [false, true]) {
+      for (var useMemcache in [false, true]) {
         test('sync successfull use-memcache($useMemcache)', () async {
           var tarballBytes = const [1, 2, 3];
           var newUrl = getUri('/api/packages/versions/new');
@@ -541,7 +541,7 @@ main() {
 
           var server = ShelfPubServer(mock);
           var request = shelf.Request('POST', url, body: formEncodedBody);
-          shelf.Response response = await server.requestHandler(request);
+          var response = await server.requestHandler(request);
 
           expect(response.statusCode, equals(400));
         });
@@ -555,7 +555,7 @@ main() {
 
           var server = ShelfPubServer(mock);
           var request = shelf.Request('POST', url, body: formEncodedBody);
-          shelf.Response response = await server.requestHandler(request);
+          var response = await server.requestHandler(request);
 
           expect(response.statusCode, equals(403));
         });
@@ -598,7 +598,7 @@ main() {
 
           var server = ShelfPubServer(mock);
           var request = shelf.Request('DELETE', url);
-          shelf.Response response = await server.requestHandler(request);
+          var response = await server.requestHandler(request);
 
           expect(response.statusCode, equals(400));
         });
@@ -612,7 +612,7 @@ main() {
 
           var server = ShelfPubServer(mock);
           var request = shelf.Request('DELETE', url);
-          shelf.Response response = await server.requestHandler(request);
+          var response = await server.requestHandler(request);
 
           expect(response.statusCode, equals(403));
         });

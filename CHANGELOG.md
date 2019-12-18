@@ -1,3 +1,7 @@
+## 0.1.6
+
+* Require at least Dart 2.2
+
 ## 0.1.5
 
 * Differentiate between client- and server-side upload issues.

@@ -32,22 +32,22 @@ class CopyAndWriteRepository extends PackageRepository {
   /// read-only [PackageRepository] which is consulted on misses in [local].
   CopyAndWriteRepository(
       PackageRepository local, PackageRepository remote, bool standalone)
-      : this.local = local,
-        this.remote = remote,
-        this.standalone = standalone,
-        this._localCache = _RemoteMetadataCache(local),
-        this._remoteCache = _RemoteMetadataCache(remote);
+      : local = local,
+        remote = remote,
+        standalone = standalone,
+        _localCache = _RemoteMetadataCache(local),
+        _remoteCache = _RemoteMetadataCache(remote);
 
   @override
   Stream<PackageVersion> versions(String package) {
     StreamController<PackageVersion> controller;
-    onListen() {
+    void onListen() {
       var waitList = [_localCache.fetchVersionlist(package)];
       if (standalone != true) {
         waitList.add(_remoteCache.fetchVersionlist(package));
       }
       Future.wait(waitList).then((tuple) {
-        var versions = Set<PackageVersion>()..addAll(tuple[0]);
+        var versions = <PackageVersion>{}..addAll(tuple[0]);
         if (standalone != true) {
           versions.addAll(tuple[1]);
         }
@@ -133,7 +133,7 @@ class _RemoteMetadataCache {
         .putIfAbsent(package, () {
           var c = Completer<Set<PackageVersion>>();
 
-          _versions.putIfAbsent(package, () => Set());
+          _versions.putIfAbsent(package, () => <PackageVersion>{});
           remote.versions(package).toList().then((versions) {
             _versions[package].addAll(versions);
             c.complete(_versions[package]);
@@ -146,7 +146,9 @@ class _RemoteMetadataCache {
   }
 
   void addVersion(String package, PackageVersion version) {
-    _versions.putIfAbsent(version.packageName, () => Set()).add(version);
+    _versions
+        .putIfAbsent(version.packageName, () => <PackageVersion>{})
+        .add(version);
   }
 
   void invalidateAll() {
