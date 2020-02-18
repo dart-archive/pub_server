@@ -1,4 +1,13 @@
-# NOTE: This is package is an alpha version and is not recommended for production use.
+# ARCHIVED
+
+This repo has been archived, and is no longer maintained.
+
+Issues and PRs will *not* be responded to.
+
+Should there be community interest in alternate package servers for Dart,
+we recommend these are handled as community projects.
+
+## NOTE: This is package is an alpha version and is not recommended for production use.
 
 Provides re-usable code for making a Dart package repository server.
 The `package:pub_server/shelf_pubserver.dart` library provides a [shelf] HTTP
